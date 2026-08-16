@@ -45,6 +45,7 @@ Thumbs.db
 .hypothesis/
 .coverage
 htmlcov/
+# SECURITY: .malbolge_cache/ contains pickle files - do not load untrusted cache files
 
 # Artifacts (large generated files)
 *.mal

@@ -23,7 +23,7 @@ from malbolge import (
     MalbolgeRuntimeError,
     ProgramGenerator,
 )
-from malbolge.generator import _PrefixState, _GenerationStats, GenerationResult
+from .backend import get_backend, MalbolgeBackend
 
 
 @dataclass
@@ -62,6 +62,7 @@ class AnchorManager:
     ):
         self.generator = generator
         self.interpreter = interpreter
+        self.backend = get_backend(generator)
         self.anchors: Dict[str, AnchorState] = {}
         self.cache_dir = cache_dir
         self.cache_dir.mkdir(parents=True, exist_ok=True)
@@ -78,7 +79,9 @@ class AnchorManager:
         
         bootstrap_ops = bootstrap_seq
         if target:
-            bootstrap_ops = self._generate_target(bs_r.machine, target, bootstrap_seq)
+            bootstrap_ops = self.backend.generate_anchor_target(
+                bs_r.machine, target, bootstrap_seq
+            )
         
         exec_r = interp.execute(bootstrap_ops, capture_machine=True)
         if exec_r.machine is None:
@@ -93,70 +96,6 @@ class AnchorManager:
         print(f"[Anchor] '{name}' hash={anchor.hash} ({len(bootstrap_ops)} ops)")
         return anchor
     
-    def _generate_target(self, start_machine: MalbolgeMachine, target: str, prefix_ops: str) -> str:
-        """Generate target text from bootstrap state without halt."""
-        from malbolge.generator import _PrefixState, _GenerationStats
-        from random import Random
-        
-        cfg = GenerationConfig(opcode_choices="op*", max_search_depth=5, random_seed=42)
-        rng = Random(cfg.random_seed)
-        interp = self.generator._interpreter
-        stats = _GenerationStats()
-        cache: dict = {}
-        dead: set = set()
-        
-        prefix = _PrefixState(opcodes=prefix_ops, output="", machine=start_machine)
-        cur = prefix
-        
-        for idx in range(len(target)):
-            found = False
-            combos = list(cfg.opcode_choices)
-            depth = 0
-            tpref = target[:idx+1]
-            
-            while not found:
-                depth += 1
-                for cand in combos:
-                    suf = cand + "<"
-                    pk = cur.opcodes + suf
-                    if pk in dead:
-                        stats.pruned += 1
-                        continue
-                    cs, _ = self.generator._get_or_extend_state(cur, suf, interp, cfg, cache, stats)
-                    if cs.machine is None: continue
-                    out = cs.output
-                    if target.startswith(out) and len(out) <= len(target):
-                        if out == tpref:
-                            cur = cs
-                            found = True
-                            break
-                if found: break
-                
-                nf = []
-                for b in combos:
-                    for o in cfg.opcode_choices:
-                        c = b + o
-                        if (cur.opcodes + c + "<") not in dead:
-                            nf.append(c)
-                combos = nf
-                if not combos:
-                    raise MalbolgeRuntimeError(f"exhausted {tpref}")
-                
-                if depth >= cfg.max_search_depth and combos:
-                    viable = [c for c in combos if (cur.opcodes + c + "<") not in dead]
-                    if not viable:
-                        combos = list(cfg.opcode_choices)
-                        depth = 0
-                        continue
-                    rc = Random(42).choice(viable)
-                    rs, _ = self.generator._get_or_extend_state(cur, rc, interp, cfg, cache, stats)
-                    if rs.machine is None: continue
-                    cur = rs
-                    combos = list(cfg.opcode_choices)
-                    depth = 0
-        
-        return cur.opcodes
-    
     def get(self, name: str) -> Optional[AnchorState]:
         return self.anchors.get(name)
     
@@ -165,16 +104,39 @@ class AnchorManager:
             self.create_anchor("default", "")
         return self.anchors["default"]
     
-    def bridge(self, from_m: MalbolgeMachine, to: AnchorState) -> str:
-        """Generate opcodes to transition from_m -> to.machine state."""
+    def bridge(self, from_m: MalbolgeMachine, to: AnchorState, random_seed: int = 42) -> str:
+        """Generate opcodes to transition from_m -> to.machine state, verifying the result matches target."""
         prefix = _PrefixState(opcodes="", output="", machine=from_m.copy())
-        return self._search_bridge(prefix, to, "OK")
+        bridge_ops = self._search_bridge(prefix, to, "OK", random_seed=random_seed)
+        
+        # Verify the bridge actually reaches the target anchor state
+        if bridge_ops:
+            br = self.interpreter.execute_from_snapshot(from_m, bridge_ops, capture_machine=True)
+            if br.machine:
+                # Verify critical machine state matches target anchor
+                target_m = to.machine
+                result_m = br.machine
+                if not self._states_match(result_m, target_m):
+                    raise MalbolgeRuntimeError(
+                        f"Bridge verification failed: resulting state does not match target anchor '{to.name}'. "
+                        f"Expected a={target_m.a}, c={target_m.c}, d={target_m.d}, "
+                        f"got a={result_m.a}, c={result_m.c}, d={result_m.d}"
+                    )
+        return bridge_ops
     
-    def _search_bridge(self, prefix, target_anchor: AnchorState, verify: str) -> str:
+    def _states_match(self, m1: MalbolgeMachine, m2: MalbolgeMachine) -> bool:
+        """Check if two machine states match in critical registers and tape prefix."""
+        if m1.a != m2.a or m1.c != m2.c or m1.d != m2.d:
+            return False
+        # Compare tape prefix (first 100 cells)
+        min_len = min(len(m1.tape), len(m2.tape), 100)
+        return m1.tape[:min_len] == m2.tape[:min_len]
+    
+    def _search_bridge(self, prefix, target_anchor: AnchorState, verify: str, random_seed: int = 42) -> str:
         from malbolge.generator import _GenerationStats
         from random import Random
         
-        cfg = GenerationConfig(opcode_choices="op*", max_search_depth=3, random_seed=42)
+        cfg = GenerationConfig(opcode_choices="op*", max_search_depth=3, random_seed=random_seed)
         rng = Random(cfg.random_seed)
         interp = self.generator._interpreter
         stats = _GenerationStats()
@@ -234,6 +196,8 @@ class AnchorManager:
             return
         data = json.loads(self._cache_file.read_text(encoding="utf-8"))
         if self._machine_file.exists():
+            # SECURITY WARNING: Only load pickle files generated by this tool.
+            # Do not load pickle files from untrusted sources.
             ms = pickle.loads(self._machine_file.read_bytes())
             for n, d in data.items():
                 if n in ms:
@@ -273,7 +237,7 @@ class WordBank:
         prefix = _PrefixState(
             opcodes=anchor.bootstrap_opcodes, output="", machine=anchor.machine.copy()
         )
-        result = self._generate_word(word, prefix)
+        result = self._generate_word(word, prefix, random_seed=anchor.hash.__hash__() & 0x7fffffff)
         cont = result.opcodes[len(anchor.bootstrap_opcodes):]
         entry = BankEntry(
             word=word, anchor_hash=anchor.hash,
@@ -302,11 +266,11 @@ class WordBank:
                 pass
         return c
     
-    def _generate_word(self, target: str, prefix) -> GenerationResult:
+    def _generate_word(self, target: str, prefix, random_seed: int = 42) -> GenerationResult:
         from malbolge.generator import _GenerationStats, GenerationResult
         from random import Random
         
-        cfg = GenerationConfig(opcode_choices="op*", max_search_depth=5, random_seed=42)
+        cfg = GenerationConfig(opcode_choices="op*", max_search_depth=5, random_seed=random_seed)
         rng = Random(cfg.random_seed)
         interp = self.generator._interpreter
         stats = _GenerationStats()
@@ -356,7 +320,7 @@ class WordBank:
                         combos = list(cfg.opcode_choices)
                         depth = 0
                         continue
-                    rc = Random(42).choice(viable)
+                    rc = Random(cfg.random_seed).choice(viable)
                     rs, _ = self.generator._get_or_extend_state(cur, rc, interp, cfg, cache, stats)
                     if rs.machine is None: continue
                     cur = rs

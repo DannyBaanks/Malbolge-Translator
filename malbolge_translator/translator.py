@@ -21,12 +21,12 @@ from malbolge import (
     MalbolgeRuntimeError,
     ProgramGenerator,
 )
-from malbolge.generator import _PrefixState, _GenerationStats, GenerationResult
 from malbolge.encoding import reverse_normalize
 from time import perf_counter_ns
 
 from .lexicon import Lexicon, DEFAULT_LEXICON, transliterate
 from .anchor import AnchorManager, AnchorState, WordBank, BankEntry
+from .backend import MalbolgeBackend, get_backend
 
 
 @dataclass
@@ -95,6 +95,8 @@ class MalbolgeTranslator:
     ):
         self.generator = ProgramGenerator()
         self.interpreter = MalbolgeInterpreter()
+        self.max_search_depth = max_search_depth
+        self.random_seed = random_seed
         self.cfg = GenerationConfig(
             opcode_choices="op*",
             max_search_depth=max_search_depth,
@@ -102,6 +104,8 @@ class MalbolgeTranslator:
         )
         self.anchor_interval = anchor_interval
         self.use_bank = use_word_bank
+        
+        self.backend = get_backend(self.generator)
         
         cache_dir = cache_dir or Path.cwd() / ".malbolge_cache"
         self.anchors = AnchorManager(self.generator, self.interpreter, cache_dir)
@@ -153,34 +157,22 @@ class MalbolgeTranslator:
                 progress_cb(i, len(words), word)
             print(f"[Word {i+1}/{len(words)}] '{word}' @{anchor.name}")
             
-            # Anchor reset?
+            # Anchor reset - clear word bank cache to prevent state drift
+            # NOTE: We do NOT reset machine state or add bridge ops to full_ops.
+            # Bridges are context-dependent and don't work when re-executed in the full program.
+            # Instead, we clear the word bank cache periodically to prevent memory growth.
             if i > 0 and i % self.anchor_interval == 0:
-                print(f"  [RESET] Bridge to anchor at word {i}")
-                bridge = self.anchors.bridge(machine, anchor)
-                if bridge:
-                    full_ops += bridge
-                    br = self.interpreter.execute_from_snapshot(machine, bridge, capture_machine=True)
-                    machine = br.machine
-                machine = anchor.machine.copy()
-                anchors_used.append(anchor.name)
+                print(f"  [RESET] Clearing word bank cache at word {i}")
+                self.bank.entries.clear()
+                # Optionally: reset machine to anchor state for generation purposes
+                # But we DON'T change the machine state for the final program
+                # machine = anchor.machine.copy()
             
-            # Try word bank (only works at exact anchor state)
+            # Word bank disabled - continuations are state-dependent in Malbolge
+            # and can only be safely reused from exact anchor state
             from_bank = False
             cont = ""
             stats = {}
-            
-            if (self.use_bank and 
-                machine.a == anchor.machine.a and
-                machine.c == anchor.machine.c and
-                machine.d == anchor.machine.d):
-                entry = self.bank.get(word, anchor.hash)
-                if entry and self.bank.verify(entry, anchor):
-                    from_bank = True
-                    cont = entry.continuation
-                    vr = self.interpreter.execute_from_snapshot(machine, cont, capture_machine=True)
-                    machine = vr.machine
-                    stats = entry.stats
-                    print(f"  [BANK HIT] {len(cont)} ops")
             
             if not from_bank:
                 cont, machine, stats = self._gen_word(word, machine, full_ops, i == len(words)-1)
@@ -223,85 +215,53 @@ class MalbolgeTranslator:
     def _gen_word(
         self, word: str, start_m: MalbolgeMachine, prefix: str, final: bool
     ) -> Tuple[Optional[str], Optional[MalbolgeMachine], dict]:
-        """Generate single word continuation from machine state."""
-        from malbolge.generator import _GenerationStats
-        from random import Random
+        """Generate single word continuation from machine state using backend."""
         from time import perf_counter_ns
         
-        prefix_state = _PrefixState(opcodes=prefix, output="", machine=start_m.copy())
-        
-        cfg = GenerationConfig(opcode_choices="op*", max_search_depth=5, random_seed=42)
-        rng = Random(cfg.random_seed)
-        interp = self.generator._interpreter
-        stats = _GenerationStats()
-        cache: dict = {}
-        dead: set = set()
-        
-        cur = prefix_state
         start_ns = perf_counter_ns()
         
-        for idx in range(len(word)):
-            found = False
-            combos = list(cfg.opcode_choices)
-            depth = 0
-            tpref = word[:idx+1]
+        # Use backend to search for continuation
+        try:
+            cont, machine, stats = self.backend.search_continuation(
+                start_machine=start_m,
+                target_text=word,
+                max_search_depth=self.max_search_depth,
+                random_seed=self.random_seed,
+            )
             
-            while not found:
-                depth += 1
-                for cand in combos:
-                    suf = cand + "<"
-                    pk = cur.opcodes + suf
-                    if pk in dead:
-                        stats.pruned += 1
-                        continue
-                    cs, _ = self.generator._get_or_extend_state(cur, suf, interp, cfg, cache, stats)
-                    if cs.machine is None: continue
-                    out = cs.output
-                    if word.startswith(out) and len(out) <= len(word):
-                        if out == tpref:
-                            cur = cs
-                            found = True
-                            break
-                
-                if found: break
-                
-                nf = []
-                for b in combos:
-                    for o in cfg.opcode_choices:
-                        c = b + o
-                        if (cur.opcodes + c + "<") not in dead:
-                            nf.append(c)
-                combos = nf
-                if not combos:
-                    return None, None, {"error": f"exhausted {tpref}"}
-                
-                if depth >= cfg.max_search_depth and combos:
-                    viable = [c for c in combos if (cur.opcodes + c + "<") not in dead]
-                    if not viable:
-                        combos = list(cfg.opcode_choices)
-                        depth = 0
-                        continue
-                    rc = Random(42).choice(viable)
-                    rs, _ = self.generator._get_or_extend_state(cur, rc, interp, cfg, cache, stats)
-                    if rs.machine is None: continue
-                    cur = rs
-                    combos = list(cfg.opcode_choices)
-                    depth = 0
-        
-        fs, _ = self.generator._get_or_extend_state(
-            cur, "v" if final else "", interp, cfg, cache, stats
-        )
-        cont = fs.opcodes[len(prefix):]
-        vr = self.interpreter.execute_from_snapshot(start_m, cont, capture_machine=True)
-        dur = perf_counter_ns() - start_ns
-        return cont, vr.machine, {"evaluations": stats.evaluations, "duration_ns": dur}
+            # If final, add halt
+            if final:
+                from malbolge import MalbolgeInterpreter
+                interp = MalbolgeInterpreter()
+                # Execute the continuation to get final state
+                vr = interp.execute_from_snapshot(start_m, cont + "v", capture_machine=True)
+                cont = cont + "v"
+                machine = vr.machine
+            else:
+                # Execute to get machine state
+                vr = self.interpreter.execute_from_snapshot(start_m, cont, capture_machine=True)
+                machine = vr.machine
+            
+            dur = perf_counter_ns() - start_ns
+            stats["duration_ns"] = dur
+            
+            return cont, machine, stats
+            
+        except MalbolgeRuntimeError as e:
+            return None, None, {"error": str(e)}
     
     def execute(self, result: TranslationResult, max_steps: int = 5_000_000) -> str:
-        """Execute the generated program and verify output."""
+        """Execute the generated program and verify output against both processed and original text."""
         out = self.interpreter.execute(result.full_opcodes, max_steps=max_steps, capture_machine=True)
-        match = out.output == result.processed_text
+        processed_match = out.output == result.processed_text
+        original_match = out.output == result.original_text
         print(f"Output: {repr(out.output)}")
-        print(f"Steps: {out.steps}, Halt: {out.halt_reason}, Match: {match}")
+        print(f"Steps: {out.steps}, Halt: {out.halt_reason}")
+        print(f"Processed match: {processed_match}")
+        print(f"Original match: {original_match}")
+        if not processed_match and not original_match:
+            print(f"Expected (processed): {repr(result.processed_text)}")
+            print(f"Expected (original): {repr(result.original_text)}")
         return out.output
     
     def save_cache(self) -> None:
