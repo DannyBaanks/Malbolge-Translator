@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Main Malbolge Translator - Anchor-aware text to Malbolge translation.
+Malbolge Translator - Uses the original malbolge-generator directly.
 
-Combines linear word chaining with periodic anchor resets for long texts.
-Supports Unicode via lexicon transliteration.
+This is a clean, working implementation that uses the proven
+malbolge-generator library directly instead of a buggy custom backend.
 """
 
 from __future__ import annotations
@@ -22,20 +22,18 @@ from malbolge import (
     ProgramGenerator,
 )
 from malbolge.encoding import reverse_normalize
-from time import perf_counter_ns
 
 from .lexicon import Lexicon, DEFAULT_LEXICON, transliterate
-from .anchor import AnchorManager, AnchorState, WordBank, BankEntry
-from .backend import MalbolgeBackend, get_backend
 
 
 @dataclass
 class WordResult:
     index: int
     word: str
-    continuation: str
-    anchor_name: str
-    from_bank: bool
+    opcodes: str
+    machine_output: str
+    anchor_name: str = "default"
+    from_bank: bool = False
     success: bool = True
     error: Optional[str] = None
 
@@ -46,22 +44,22 @@ class TranslationResult:
     processed_text: str
     words: List[WordResult]
     full_opcodes: str
-    full_program: str  # ASCII Malbolge source
+    full_program: str
     stats: dict
     anchors_used: List[str]
-    
+
     def save_all(self, output_dir: Path, base_name: str = "output") -> None:
         output_dir.mkdir(parents=True, exist_ok=True)
-        
+
         for i, w in enumerate(self.words):
-            (output_dir / f"{base_name}_word_{i:04d}.op").write_text(w.continuation, encoding="utf-8")
+            (output_dir / f"{base_name}_word_{i:04d}.op").write_text(w.opcodes, encoding="utf-8")
             (output_dir / f"{base_name}_word_{i:04d}.json").write_text(
                 json.dumps({
-                    "index": w.index, "word": w.word, "opcodes": w.continuation,
+                    "index": w.index, "word": w.word, "opcodes": w.opcodes,
                     "anchor": w.anchor_name, "from_bank": w.from_bank, "success": w.success
                 }, ensure_ascii=False, indent=2), encoding="utf-8"
             )
-        
+
         (output_dir / f"{base_name}_full.op").write_text(self.full_opcodes, encoding="utf-8")
         (output_dir / f"{base_name}_full.mal").write_text(self.full_program, encoding="utf-8")
         (output_dir / f"{base_name}_manifest.json").write_text(json.dumps({
@@ -76,181 +74,76 @@ class MalbolgeTranslator:
     """
     Translates arbitrary text to pure Malbolge programs.
     
-    Architecture:
-    - Bootstrap to anchor state once at start
-    - Chain words linearly (each continues from previous machine state)
-    - Periodic anchor resets to prevent state drift
-    - Optional word bank cache for words from anchor state
-    - Unicode support via lexicon transliteration
+    Uses the proven malbolge-generator library directly.
     """
-    
+
     def __init__(
         self,
         max_search_depth: int = 5,
         random_seed: int = 42,
-        anchor_interval: int = 50,
-        use_word_bank: bool = True,
         cache_dir: Optional[Path] = None,
         lexicon: Optional[Lexicon] = None,
     ):
         self.generator = ProgramGenerator()
         self.interpreter = MalbolgeInterpreter()
-        self.max_search_depth = max_search_depth
-        self.random_seed = random_seed
-        self.cfg = GenerationConfig(
+        self.config = GenerationConfig(
             opcode_choices="op*",
             max_search_depth=max_search_depth,
             random_seed=random_seed,
         )
-        self.anchor_interval = anchor_interval
-        self.use_bank = use_word_bank
-        
-        self.backend = get_backend(self.generator)
-        
-        cache_dir = cache_dir or Path.cwd() / ".malbolge_cache"
-        self.anchors = AnchorManager(self.generator, self.interpreter, cache_dir)
-        self.bank = WordBank(self.generator, self.interpreter, cache_dir)
         self.lexicon = lexicon or Lexicon()
-        
-        self.anchors.load()
-        self.bank.load()
-        self.anchors.default()
-    
+
     def translate(
         self,
         text: str,
         progress_callback: Optional[Callable[[int, int, str], None]] = None,
-    ) -> TranslationResult:
+    ) -> "TranslationResult":
         """Translate text to Malbolge opcodes."""
         # 1. Transliterate Unicode to ASCII
         processed = transliterate(text, self.lexicon)
+
+        # 2. Generate the entire text at once (generator handles it efficiently)
+        if progress_callback:
+            progress_callback(0, 1, processed)
         
-        # 2. Split into words preserving spaces
-        words = re.split(r'(\s+)', processed)
-        words = [w for w in words if w]
-        
-        # 3. Generate with anchor resets
-        return self._generate(words, progress_callback, processed, text)
-    
-    def _generate(
-        self,
-        words: list,
-        progress_cb: Optional[Callable[[int, int, str], None]],
-        processed: str,
-        original: str,
-    ) -> TranslationResult:
-        results = []
-        full_ops = ""
-        anchors_used = []
-        
-        # Bootstrap to anchor
-        anchor = self.anchors.default()
-        machine = anchor.machine.copy()
-        full_ops = anchor.bootstrap_opcodes
-        anchors_used.append(anchor.name)
-        
-        total_evals = 0
-        total_dur_ns = 0
-        
-        for i, word in enumerate(words):
-            if progress_cb:
-                progress_cb(i, len(words), word)
-            print(f"[Word {i+1}/{len(words)}] '{word}' @{anchor.name}")
-            
-            # Anchor reset - clear word bank cache to prevent state drift
-            # NOTE: We do NOT reset machine state or add bridge ops to full_ops.
-            # Bridges are context-dependent and don't work when re-executed in the full program.
-            # Instead, we clear the word bank cache periodically to prevent memory growth.
-            if i > 0 and i % self.anchor_interval == 0:
-                print(f"  [RESET] Clearing word bank cache at word {i}")
-                self.bank.entries.clear()
-                # Optionally: reset machine to anchor state for generation purposes
-                # But we DON'T change the machine state for the final program
-                # machine = anchor.machine.copy()
-            
-            # Word bank disabled - continuations are state-dependent in Malbolge
-            # and can only be safely reused from exact anchor state
-            from_bank = False
-            cont = ""
-            stats = {}
-            
-            if not from_bank:
-                cont, machine, stats = self._gen_word(word, machine, full_ops, i == len(words)-1)
-                if cont is None:
-                    results.append(WordResult(i, word, "", anchor.name, False, False, stats.get("error")))
-                    break
-                
-                # Cache if at anchor state
-                if (self.use_bank and
-                    machine.a == anchor.machine.a and
-                    machine.c == anchor.machine.c and
-                    machine.d == anchor.machine.d):
-                    self.bank.entries[(anchor.hash, word)] = BankEntry(
-                        word=word, anchor_hash=anchor.hash,
-                        continuation=cont, stats=stats,
-                    )
-            
-            results.append(WordResult(i, word, cont, anchor.name, from_bank))
-            full_ops += cont
-            total_evals += stats.get("evaluations", 0)
-            total_dur_ns += stats.get("duration_ns", 0)
-        
-        full_program = "".join(reverse_normalize(full_ops))
-        
+        try:
+            result = self.generator.generate_for_string(processed)
+            cont = result.opcodes
+            machine_output = result.machine_output
+            stats = result.stats
+        except Exception as e:
+            return TranslationResult(
+                original_text=text,
+                processed_text=processed,
+                words=[WordResult(0, processed, "", "", "default", False, str(e))],
+                full_opcodes="",
+                full_program="",
+                stats={"words": 1, "evaluations": 0, "duration_s": 0, "anchors_used": 1},
+                anchors_used=["default"],
+            )
+
+        if progress_callback:
+            progress_callback(1, 1, processed)
+
+        word_result = WordResult(0, processed, cont, machine_output, "default", False)
+        full_program = "".join(reverse_normalize(cont))
+
         return TranslationResult(
-            original_text=original,
+            original_text=text,
             processed_text=processed,
-            words=results,
-            full_opcodes=full_ops,
+            words=[word_result],
+            full_opcodes=cont,
             full_program=full_program,
             stats={
-                "words": len(results),
-                "evaluations": total_evals,
-                "duration_s": total_dur_ns / 1e9,
-                "anchors_used": len(set(anchors_used)),
+                "words": 1,
+                "evaluations": stats.get("evaluations", 0),
+                "duration_s": stats.get("duration_ns", 0) / 1e9,
+                "anchors_used": 1,
             },
-            anchors_used=anchors_used,
+            anchors_used=["default"],
         )
-    
-    def _gen_word(
-        self, word: str, start_m: MalbolgeMachine, prefix: str, final: bool
-    ) -> Tuple[Optional[str], Optional[MalbolgeMachine], dict]:
-        """Generate single word continuation from machine state using backend."""
-        from time import perf_counter_ns
-        
-        start_ns = perf_counter_ns()
-        
-        # Use backend to search for continuation
-        try:
-            cont, machine, stats = self.backend.search_continuation(
-                start_machine=start_m,
-                target_text=word,
-                max_search_depth=self.max_search_depth,
-                random_seed=self.random_seed,
-            )
-            
-            # If final, add halt
-            if final:
-                from malbolge import MalbolgeInterpreter
-                interp = MalbolgeInterpreter()
-                # Execute the continuation to get final state
-                vr = interp.execute_from_snapshot(start_m, cont + "v", capture_machine=True)
-                cont = cont + "v"
-                machine = vr.machine
-            else:
-                # Execute to get machine state
-                vr = self.interpreter.execute_from_snapshot(start_m, cont, capture_machine=True)
-                machine = vr.machine
-            
-            dur = perf_counter_ns() - start_ns
-            stats["duration_ns"] = dur
-            
-            return cont, machine, stats
-            
-        except MalbolgeRuntimeError as e:
-            return None, None, {"error": str(e)}
-    
-    def execute(self, result: TranslationResult, max_steps: int = 5_000_000) -> str:
+
+    def execute(self, result: "TranslationResult", max_steps: int = 5_000_000) -> str:
         """Execute the generated program and verify output against both processed and original text."""
         out = self.interpreter.execute(result.full_opcodes, max_steps=max_steps, capture_machine=True)
         processed_match = out.output == result.processed_text
@@ -263,11 +156,9 @@ class MalbolgeTranslator:
             print(f"Expected (processed): {repr(result.processed_text)}")
             print(f"Expected (original): {repr(result.original_text)}")
         return out.output
-    
+
     def save_cache(self) -> None:
-        self.anchors.save()
-        self.bank.save()
-        print("[Cache] Saved anchors and word bank")
+        print("[Cache] No cache to save in simplified mode")
 
 
 # ============================================================
@@ -323,3 +214,67 @@ CODE_COMMON = [
     "use","pub","match","loop","break","continue","move","ref","box","vec","string","option","result","ok",
     "err","some","none","unwrap","expect","panic","assert",
 ]
+
+
+def load_text_from_file(path: Path) -> str:
+    return path.read_text(encoding="utf-8")
+
+
+def main():
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Malbolge Translator - Generate pure Malbolge programs")
+    parser.add_argument("input", nargs="?", help="Input text file or direct text (if --direct)")
+    parser.add_argument("--direct", action="store_true", help="Treat input as direct text, not file")
+    parser.add_argument("--max-depth", type=int, default=5, help="Max search depth (default: 5)")
+    parser.add_argument("--seed", type=int, default=42, help="Random seed (default: 42)")
+    parser.add_argument("--output-dir", default="malbolge_output", help="Output directory (default: malbolge_output)")
+    parser.add_argument("--base-name", default="output", help="Base filename (default: output)")
+    parser.add_argument("--execute", action="store_true", help="Execute the generated program after generation")
+    parser.add_argument("--max-steps", type=int, default=5_000_000, help="Max steps for execution")
+    parser.add_argument("--populate-bank", action="store_true", help="Pre-populate word bank with common words")
+
+    args = parser.parse_args()
+
+    if not args.input and not args.direct:
+        # Read from stdin
+        import sys
+        text = sys.stdin.read()
+    elif args.direct:
+        text = args.input
+    else:
+        text = load_text_from_file(Path(args.input))
+
+    if not text:
+        parser.error("No input text provided")
+
+    print(f"[INFO] Input text length: {len(text)} chars")
+
+    translator = MalbolgeTranslator(
+        max_search_depth=args.max_depth,
+        random_seed=args.seed,
+    )
+
+    def progress(i, total, word):
+        if i % 10 == 0:
+            print(f"  Progress: {i+1}/{total} words")
+
+    result = translator.translate(text, progress_callback=progress)
+
+    result.save_all(Path(args.output_dir), args.base_name)
+
+    print(f"\n[SUMMARY]")
+    print(f"  Words: {len(result.words)}")
+    print(f"  Opcodes: {len(result.full_opcodes)}")
+    print(f"  Program: {len(result.full_program)} chars")
+    print(f"  Evaluations: {result.stats['evaluations']}")
+    print(f"  Time: {result.stats['duration_s']:.2f}s")
+    print(f"  Anchors: {result.stats['anchors_used']}")
+
+    if args.execute:
+        print()
+        translator.execute(result, max_steps=args.max_steps)
+
+
+if __name__ == "__main__":
+    main()

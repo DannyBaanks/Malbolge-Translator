@@ -14,12 +14,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from .translator import (
-    MalbolgeTranslator,
-    SPANISH_COMMON,
-    ENGLISH_COMMON,
-    CODE_COMMON,
-)
+from .translator import MalbolgeTranslator
 from .lexicon import Lexicon
 
 try:
@@ -45,8 +40,6 @@ def main(argv: list[str] | None = None) -> int:
     
     parser.add_argument("--max-depth", type=int, default=5, help="Max search depth (default: 5)")
     parser.add_argument("--seed", type=int, default=42, help="Random seed (default: 42)")
-    parser.add_argument("--anchor-every", type=int, default=50, help="Anchor reset interval (default: 50)")
-    parser.add_argument("--no-bank", action="store_true", help="Disable word bank cache")
     parser.add_argument("--no-lexicon", action="store_true", help="Disable Unicode transliteration")
     
     parser.add_argument("--output-dir", type=Path, default="malbolge_output", help="Output directory")
@@ -56,7 +49,6 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-steps", type=int, default=5_000_000, help="Max execution steps")
     
     parser.add_argument("--quijote", action="store_true", help="Generate Don Quijote (downloads if needed)")
-    parser.add_argument("--populate-bank", action="store_true", help="Pre-populate word bank with common words")
     
     parser.add_argument("--lexicon-add", nargs=2, metavar=("CHAR", "REPL"), action="append", help="Add custom lexicon mapping")
     parser.add_argument("--lexicon-file", type=Path, help="Load custom lexicon from JSON file")
@@ -76,18 +68,10 @@ def main(argv: list[str] | None = None) -> int:
     translator = MalbolgeTranslator(
         max_search_depth=args.max_depth,
         random_seed=args.seed,
-        anchor_interval=args.anchor_every,
-        use_word_bank=not args.no_bank,
         lexicon=lexicon,
     )
     
-    # Pre-populate bank
-    if args.populate_bank:
-        print("[INFO] Pre-populating word bank...")
-        translator.bank.bulk(SPANISH_COMMON[:100], translator.anchors.default())
-        translator.bank.bulk(ENGLISH_COMMON[:100], translator.anchors.default())
-        translator.bank.bulk(CODE_COMMON[:50], translator.anchors.default())
-        translator.save_cache()
+    
     
     # Handle Quijote generation
     if args.quijote:
@@ -166,13 +150,6 @@ def generate_quijote(translator: MalbolgeTranslator, args) -> int:
     print(f"[QUIJOTE] Text length: {len(text):,} chars")
     print(f"[QUIJOTE] Estimated words: ~{len(text.split()):,}")
     
-    # Pre-populate bank for common words
-    print("[QUIJOTE] Pre-populating word bank with common Spanish words...")
-    translator.bank.bulk(SPANISH_COMMON[:200], translator.anchors.default())
-    
-    # Translate with larger anchor interval for long text
-    translator.anchor_interval = 100
-    
     def progress(i, total, word):
         if i % 100 == 0:
             pct = (i / total) * 100
@@ -183,7 +160,6 @@ def generate_quijote(translator: MalbolgeTranslator, args) -> int:
     # Save
     output_dir = args.output_dir or Path("quijote_malbolge")
     result.save_all(output_dir, "quijote")
-    translator.save_cache()
     
     print(f"\n[QUIJOTE COMPLETE]")
     print(f"  Words: {len(result.words):,}")
@@ -191,7 +167,7 @@ def generate_quijote(translator: MalbolgeTranslator, args) -> int:
     print(f"  Program: {len(result.full_program):,} chars ({len(result.full_program)/1e6:.1f} MB)")
     print(f"  Time: {result.stats['duration_s']:.1f}s")
     
-    # Execute verification (first 1000 words only for speed)
+    # Execute verification
     if args.execute:
         print("[QUIJOTE] Verifying execution...")
         translator.execute(result, max_steps=args.max_steps)

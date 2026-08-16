@@ -52,6 +52,9 @@ class MalbolgeBackend:
     only this adapter needs to be updated.
     """
     
+    # Limit cache size to prevent memory exhaustion
+    MAX_CACHE_SIZE = 10000
+    
     def __init__(self, generator: ProgramGenerator):
         self._generator = generator
         self._interpreter = generator._interpreter
@@ -77,7 +80,7 @@ class MalbolgeBackend:
         self,
         prefix_state: _InternalPrefixState,
         suffix: str,
-        config: GenerationConfig,
+        cfg: GenerationConfig,
         cache: Dict[str, _InternalPrefixState],
         stats: _InternalGenerationStats,
     ) -> Tuple[_InternalPrefixState, bool]:
@@ -94,8 +97,14 @@ class MalbolgeBackend:
             return cached, True
         
         extended = self._extend_state(
-            prefix_state, suffix, config, stats
+            prefix_state, suffix, cfg, stats
         )
+        # Limit cache size to prevent memory exhaustion
+        if len(cache) >= self.MAX_CACHE_SIZE:
+            # Remove oldest entries (simple FIFO)
+            keys_to_remove = list(cache.keys())[:len(cache) // 4]
+            for key in keys_to_remove:
+                del cache[key]
         cache[candidate_key] = extended
         return extended, False
     
@@ -103,7 +112,7 @@ class MalbolgeBackend:
         self,
         prefix_state: _InternalPrefixState,
         suffix: str,
-        config: GenerationConfig,
+        cfg: GenerationConfig,
         stats: _InternalGenerationStats,
     ) -> _InternalPrefixState:
         """Extend prefix state with suffix opcodes."""
@@ -111,10 +120,13 @@ class MalbolgeBackend:
             return prefix_state
         
         new_length = len(prefix_state.opcodes) + len(suffix)
-        if new_length > config.max_program_length:
+        if new_length > cfg.max_program_length:
             raise MalbolgeRuntimeError(
                 "Generated program exceeds maximum allowed length."
             )
+        
+        # Limit output size to prevent memory exhaustion
+        MAX_OUTPUT_LENGTH = 10000
         
         # Convert internal prefix state to malbolge-generator _PrefixState
         from malbolge.generator import _PrefixState as GenPrefixState
@@ -125,7 +137,7 @@ class MalbolgeBackend:
         )
         
         result = self._generator._extend_state(
-            gen_prefix, suffix, self._interpreter, config, stats
+            gen_prefix, suffix, self._interpreter, cfg, stats
         )
         
         if result.machine is None:
@@ -133,25 +145,30 @@ class MalbolgeBackend:
                 "Generator failed to capture machine snapshot during extension."
             )
         
+        # Limit output size to prevent memory exhaustion
+        output = prefix_state.output + result.output
+        if len(output) > MAX_OUTPUT_LENGTH:
+            output = output[:MAX_OUTPUT_LENGTH]
+        
         return _InternalPrefixState(
             opcodes=result.opcodes,
-            output=prefix_state.output + result.output,
+            output=output,
             machine=result.machine
         )
     
     def finalize_state(
         self,
         state: _InternalPrefixState,
-        config: GenerationConfig,
+        cfg: GenerationConfig,
         add_halt: bool = True,
     ) -> _InternalPrefixState:
         """Finalize state by adding halt opcode if requested."""
         halt_suffix = "v" if add_halt else ""
         final_state, _ = self.get_or_extend_state(
             state, halt_suffix, GenerationConfig(
-                opcode_choices=config.opcode_choices,
-                max_search_depth=config.max_search_depth,
-                random_seed=config.random_seed
+                opcode_choices=cfg.opcode_choices,
+                max_search_depth=cfg.max_search_depth,
+                random_seed=cfg.random_seed
             ), {}, _InternalGenerationStats()
         )
         return final_state
@@ -174,7 +191,7 @@ class MalbolgeBackend:
         from random import Random
         
         cfg = GenerationConfig(
-            opcode_choices="op*",
+            opcode_choices=opcode_choices,
             max_search_depth=max_search_depth,
             random_seed=random_seed,
         )
@@ -183,6 +200,8 @@ class MalbolgeBackend:
         stats = _InternalGenerationStats()
         cache: dict = {}
         dead: Set[str] = set()
+        # Limit cache size to prevent memory exhaustion
+        MAX_CACHE_SIZE = 10000
         
         prefix = self.create_prefix_state("", "", start_machine)
         cur = prefix
@@ -204,7 +223,7 @@ class MalbolgeBackend:
                         continue
                     
                     cs, _ = self.get_or_extend_state(
-                        cur, suf, config, cache, stats
+                        cur, suf, cfg, cache, stats
                     )
                     if cs.machine is None:
                         continue
@@ -229,20 +248,20 @@ class MalbolgeBackend:
                 if not combos:
                     raise MalbolgeRuntimeError(f"exhausted {tpref}")
                 
-                if depth >= config.max_search_depth and combos:
+                if depth >= cfg.max_search_depth and combos:
                     viable = [c for c in combos if (cur.opcodes + c + "<") not in dead]
                     if not viable:
-                        combos = list(config.opcode_choices)
+                        combos = list(cfg.opcode_choices)
                         depth = 0
                         continue
                     rc = Random(random_seed).choice(viable)
                     rs, _ = self.get_or_extend_state(
-                        cur, rc, config, cache, stats
+                        cur, rc, cfg, cache, stats
                     )
                     if rs.machine is None:
                         continue
                     cur = rs
-                    combos = list(config.opcode_choices)
+                    combos = list(cfg.opcode_choices)
                     depth = 0
         
         # Add halt
@@ -311,7 +330,7 @@ class MalbolgeBackend:
                         continue
                     
                     cs, _ = self.get_or_extend_state(
-                        cur, suf, config, cache, stats
+                        cur, suf, cfg, cache, stats
                     )
                     if cs.machine is None:
                         continue
@@ -336,20 +355,20 @@ class MalbolgeBackend:
                 if not combos:
                     raise MalbolgeRuntimeError(f"exhausted {tpref}")
                 
-                if depth >= config.max_search_depth and combos:
+                if depth >= cfg.max_search_depth and combos:
                     viable = [c for c in combos if (cur.opcodes + c + "<") not in dead]
                     if not viable:
-                        combos = list(config.opcode_choices)
+                        combos = list(cfg.opcode_choices)
                         depth = 0
                         continue
                     rc = Random(random_seed).choice(viable)
                     rs, _ = self.get_or_extend_state(
-                        cur, rc, config, cache, stats
+                        cur, rc, cfg, cache, stats
                     )
                     if rs.machine is None:
                         continue
                     cur = rs
-                    combos = list(config.opcode_choices)
+                    combos = list(cfg.opcode_choices)
                     depth = 0
         
         # Add halt
@@ -378,10 +397,14 @@ class MalbolgeBackend:
         random_seed: int = 42,
     ) -> str:
         """Generate target text from bootstrap state without halt."""
-        # This is the _generate_target logic from anchor.py
+# This is the _generate_target logic from anchor.py
         from random import Random
         
-        cfg = GenerationConfig(opcode_choices="op*", max_search_depth=max_search_depth, random_seed=random_seed)
+        cfg = GenerationConfig(
+            opcode_choices="op*",
+            max_search_depth=max_search_depth,
+            random_seed=random_seed,
+        )
         rng = Random(cfg.random_seed)
         interp = self._interpreter
         stats = _InternalGenerationStats()
@@ -447,7 +470,7 @@ class MalbolgeBackend:
         verify_text: str = "OK",
         max_search_depth: int = 3,
         random_seed: int = 42,
-    ) -> str:
+) -> str:
         """
         Search for opcodes to transition from_machine to target_anchor_machine.
         
