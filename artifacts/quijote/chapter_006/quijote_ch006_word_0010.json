@@ -1,0 +1,8 @@
+{
+  "index": 10,
+  "word": "AND",
+  "opcodes": "**oo*o**oo*o**oo*o**oo*o**oo*oooo*p<oo*p<**oo*o**oo*oooopp<",
+  "anchor": "default",
+  "from_bank": false,
+  "success": true
+}

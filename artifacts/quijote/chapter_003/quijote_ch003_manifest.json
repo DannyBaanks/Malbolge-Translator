@@ -1,0 +1,15 @@
+{
+  "original": "CHAPTER III\nWHEREIN IS RELATED THE DROLL WAY IN WHICH DON QUIXOTE HAD HIMSELF DUBBED A\nKNIGHT",
+  "processed": "CHAPTER III\nWHEREIN IS RELATED THE DROLL WAY IN WHICH DON QUIXOTE HAD HIMSELF DUBBED A\nKNIGHT",
+  "words": 33,
+  "anchors": [
+    "default"
+  ],
+  "opcodes": 2247,
+  "stats": {
+    "words": 33,
+    "evaluations": 112428,
+    "duration_s": 6.5123628,
+    "anchors_used": 1
+  }
+}

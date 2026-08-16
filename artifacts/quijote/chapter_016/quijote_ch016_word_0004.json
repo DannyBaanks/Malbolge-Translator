@@ -1,0 +1,8 @@
+{
+  "index": 4,
+  "word": "IN",
+  "opcodes": "o*op<**oo*o**oo*o**oo*o**oo*opp<",
+  "anchor": "default",
+  "from_bank": false,
+  "success": true
+}

@@ -1,0 +1,15 @@
+{
+  "original": "CHAPTER X OF THE\nPLEASANT DISCOURSE THAT PASSED BETWEEN DON QUIXOTE AND HIS SQUIRE SANCHO\nPANZA",
+  "processed": "CHAPTER X OF THE\nPLEASANT DISCOURSE THAT PASSED BETWEEN DON QUIXOTE AND HIS SQUIRE SANCHO\nPANZA",
+  "words": 31,
+  "anchors": [
+    "default"
+  ],
+  "opcodes": 2576,
+  "stats": {
+    "words": 31,
+    "evaluations": 130370,
+    "duration_s": 6.6626588,
+    "anchors_used": 1
+  }
+}

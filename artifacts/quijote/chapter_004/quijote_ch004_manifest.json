@@ -1,0 +1,15 @@
+{
+  "original": "CHAPTER IV OF WHAT HAPPENED TO OUR\nKNIGHT WHEN HE LEFT THE INN",
+  "processed": "CHAPTER IV OF WHAT HAPPENED TO OUR\nKNIGHT WHEN HE LEFT THE INN",
+  "words": 25,
+  "anchors": [
+    "default"
+  ],
+  "opcodes": 1554,
+  "stats": {
+    "words": 25,
+    "evaluations": 75686,
+    "duration_s": 3.696761,
+    "anchors_used": 1
+  }
+}

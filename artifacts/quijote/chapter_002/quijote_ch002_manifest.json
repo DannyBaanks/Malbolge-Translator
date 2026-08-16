@@ -1,0 +1,15 @@
+{
+  "original": "CHAPTER II WHICH TREATS OF THE FIRST SALLY THE INGENIOUS\nDON QUIXOTE MADE FROM HOME",
+  "processed": "CHAPTER II WHICH TREATS OF THE FIRST SALLY THE INGENIOUS\nDON QUIXOTE MADE FROM HOME",
+  "words": 29,
+  "anchors": [
+    "default"
+  ],
+  "opcodes": 1864,
+  "stats": {
+    "words": 29,
+    "evaluations": 90775,
+    "duration_s": 5.192174,
+    "anchors_used": 1
+  }
+}

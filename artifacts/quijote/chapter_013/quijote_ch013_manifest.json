@@ -1,0 +1,15 @@
+{
+  "original": "CHAPTER XIV WHEREIN ARE\nINSERTED THE DESPAIRING VERSES OF THE DEAD SHEPHERD, TOGETHER WITH OTHER\nINCIDENTS NOT LOOKED FOR",
+  "processed": "CHAPTER XIV WHEREIN ARE\nINSERTED THE DESPAIRING VERSES OF THE DEAD SHEPHERD, TOGETHER WITH OTHER\nINCIDENTS NOT LOOKED FOR",
+  "words": 37,
+  "anchors": [
+    "default"
+  ],
+  "opcodes": 3301,
+  "stats": {
+    "words": 37,
+    "evaluations": 169906,
+    "duration_s": 10.8636924,
+    "anchors_used": 1
+  }
+}

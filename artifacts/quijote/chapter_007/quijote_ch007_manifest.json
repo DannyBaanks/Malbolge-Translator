@@ -1,0 +1,15 @@
+{
+  "original": "CHAPTER VII OF THE SECOND SALLY OF OUR WORTHY\nKNIGHT DON QUIXOTE OF LA MANCHA",
+  "processed": "CHAPTER VII OF THE SECOND SALLY OF OUR WORTHY\nKNIGHT DON QUIXOTE OF LA MANCHA",
+  "words": 29,
+  "anchors": [
+    "default"
+  ],
+  "opcodes": 2037,
+  "stats": {
+    "words": 29,
+    "evaluations": 103528,
+    "duration_s": 5.6969511,
+    "anchors_used": 1
+  }
+}

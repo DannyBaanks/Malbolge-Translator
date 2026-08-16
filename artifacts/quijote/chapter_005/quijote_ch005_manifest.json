@@ -1,0 +1,15 @@
+{
+  "original": "CHAPTER V IN\nWHICH THE NARRATIVE OF OUR KNIGHT’S MISHAP IS CONTINUED",
+  "processed": "CHAPTER V IN\nWHICH THE NARRATIVE OF OUR KNIGHT'S MISHAP IS CONTINUED",
+  "words": 23,
+  "anchors": [
+    "default"
+  ],
+  "opcodes": 1824,
+  "stats": {
+    "words": 23,
+    "evaluations": 91717,
+    "duration_s": 5.120861,
+    "anchors_used": 1
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "index": 42,
+  "word": "DEAD",
+  "opcodes": "**oo*o**oo*o*pppp<*pop<o*p<opp<",
+  "anchor": "default",
+  "from_bank": false,
+  "success": true
+}

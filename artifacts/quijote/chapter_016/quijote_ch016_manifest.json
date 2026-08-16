@@ -1,0 +1,15 @@
+{
+  "original": "CHAPTER XVIII IN WHICH\nIS RELATED THE DISCOURSE SANCHO PANZA HELD WITH HIS MASTER, DON QUIXOTE,\nAND OTHER ADVENTURES WORTH RELATING",
+  "processed": "CHAPTER XVIII IN WHICH\nIS RELATED THE DISCOURSE SANCHO PANZA HELD WITH HIS MASTER, DON QUIXOTE,\nAND OTHER ADVENTURES WORTH RELATING",
+  "words": 41,
+  "anchors": [
+    "default"
+  ],
+  "opcodes": 3356,
+  "stats": {
+    "words": 41,
+    "evaluations": 171888,
+    "duration_s": 12.0561981,
+    "anchors_used": 1
+  }
+}

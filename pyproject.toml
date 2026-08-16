@@ -1,0 +1,40 @@
+[project]
+name = "malbolge-translator"
+version = "1.0.0"
+description = "Malbolge text translator with anchor harness - generates pure Malbolge programs for arbitrary text in any language"
+readme = "README.md"
+license = {file = "LICENSE"}
+requires-python = ">=3.10"
+dependencies = [
+    "malbolge-generator>=0.1.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest", "black", "ruff", "mypy"]
+render = ["pillow>=10.0"]
+
+[project.scripts]
+malbolge-translate = "malbolge_translator.cli:main"
+malbolge-quijote = "malbolge_translator.generate_quijote:main"
+
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["malbolge_translator*"]
+exclude = ["artifacts*"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true

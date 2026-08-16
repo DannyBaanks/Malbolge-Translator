@@ -1,0 +1,15 @@
+{
+  "original": "CHAPTER VI OF THE DIVERTING AND IMPORTANT SCRUTINY WHICH\nTHE CURATE AND THE BARBER MADE IN THE LIBRARY OF OUR INGENIOUS GENTLEMAN",
+  "processed": "CHAPTER VI OF THE DIVERTING AND IMPORTANT SCRUTINY WHICH\nTHE CURATE AND THE BARBER MADE IN THE LIBRARY OF OUR INGENIOUS GENTLEMAN",
+  "words": 43,
+  "anchors": [
+    "default"
+  ],
+  "opcodes": 3686,
+  "stats": {
+    "words": 43,
+    "evaluations": 191751,
+    "duration_s": 14.8939374,
+    "anchors_used": 1
+  }
+}

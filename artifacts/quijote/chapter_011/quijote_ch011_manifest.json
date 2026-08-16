@@ -1,0 +1,15 @@
+{
+  "original": "CHAPTER XI OF WHAT BEFELL DON QUIXOTE\nWITH CERTAIN GOATHERDS",
+  "processed": "CHAPTER XI OF WHAT BEFELL DON QUIXOTE\nWITH CERTAIN GOATHERDS",
+  "words": 19,
+  "anchors": [
+    "default"
+  ],
+  "opcodes": 1719,
+  "stats": {
+    "words": 19,
+    "evaluations": 86260,
+    "duration_s": 4.3174807,
+    "anchors_used": 1
+  }
+}
