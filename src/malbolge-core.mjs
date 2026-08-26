@@ -1,4 +1,4 @@
-// malbolge-core.mjs — puerto fiel del interprete canonico in-repo
+﻿// malbolge-core.mjs â€” puerto fiel del interprete canonico in-repo
 // (workspace/assembly/malbolge/malbolge_interpreter.py, convencion op=(v+c)%94)
 // Cuarta implementacion independiente para el consenso multi-backend.
 
@@ -64,8 +64,9 @@ export function encryptCell(v) {
 export function run(source, stdinData = "", maxSteps = 2000000) {
   const { mem, invalidAt } = loadMemory(source);
   if (mem === null) {
-    return { output: "", steps: 0, status: `INVALID:non-printable source char at ${invalidAt}` };
+    return { output: "", steps: 0, status: `INVALID:non-printable source char at ${invalidAt}`, counts: null };
   }
+  const counts = new Int32Array(MEM_SIZE); // analisis estilo Walbolge-lite
   const stdinCodes = [];
   for (const ch of stdinData) stdinCodes.push(ch.codePointAt(0));
   let si = 0;
@@ -76,6 +77,7 @@ export function run(source, stdinData = "", maxSteps = 2000000) {
     steps++;
     const cell = mem[c];
     const op = (cell + c) % 94;
+    counts[c]++;
     let jumped = false;
 
     switch (op) {
@@ -105,7 +107,7 @@ export function run(source, stdinData = "", maxSteps = 2000000) {
       case OP_NOP:
         break;
       case OP_HALT:
-        return { output: latin1(out), steps, status: "HALTED" };
+        return { output: latin1(out), steps, status: "HALTED", counts };
       default:
         break; // invalido = NOP segun la spec
     }
@@ -115,7 +117,7 @@ export function run(source, stdinData = "", maxSteps = 2000000) {
     c = (c + 1) % MEM_SIZE;
     d = (d + 1) % MEM_SIZE;
   }
-  return { output: latin1(out), steps, status: "MAX_STEPS" };
+  return { output: latin1(out), steps, status: "MAX_STEPS", counts };
 }
 
 function latin1(bytes) {
