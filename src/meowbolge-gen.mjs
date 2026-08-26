@@ -102,14 +102,24 @@ function verificarRuta(fuente, ruta, objetivo) {
 }
 
 export class GenTimeout extends Error {}
+export class GenPaused extends Error {
+  constructor(payload) {
+    super("GEN_PAUSED");
+    this.payload = payload;
+  }
+}
 
 export function generar(texto, opts = {}) {
   const { rapido = true, ancho = 40, verbose = false, log = console.error,
-          deadlineMs = Number.POSITIVE_INFINITY } = opts;
+          deadlineMs = Number.POSITIVE_INFINITY,
+          onProgress = null, shouldPause = null } = opts;
   const t0 = Date.now();
   const expirado = () => Date.now() - t0 > deadlineMs;
   let fuente = "";
   for (let i = 0; i < texto.length; i++) {
+    if (shouldPause && shouldPause()) {
+      throw new GenPaused({ nextIndex: i, fuente });
+    }
     if (expirado()) {
       throw new GenTimeout(
         `GEN_TIMEOUT: ${texto.length} chars, rindiendose en el ${i + 1} ` +
@@ -156,6 +166,7 @@ export function generar(texto, opts = {}) {
       metodo = "bruta";
     }
     fuente = hallado;
+    if (onProgress) onProgress({ i: i + 1, total: texto.length, fuente });
     if (verbose) log(`  [${i + 1}/${texto.length}] ${JSON.stringify(ch)} -> ${fuente.length} celdas (${metodo})`);
   }
   return fuente + colaHalt(fuente.length);

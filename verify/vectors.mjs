@@ -57,7 +57,7 @@ const ART = " /\\_/\\\n( o.o )\n > ^ <";
   let ok = false, detalle = "";
   const t0 = Date.now();
   try {
-    const prog = generar("meow", { verbose: false, ancho: 9 });
+    const prog = generar("meow", { verbose: false, ancho: 9, deadlineMs: 30000 });
     const r = run(prog);
     ok = r.output === "meow" && r.status === "HALTED";
     detalle = `${prog.length} celdas, ${r.steps} pasos`;

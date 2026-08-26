@@ -53,6 +53,23 @@
     <span id="badge"></span>
   </div>
 
+  <fieldset>
+    <legend>Traducción por lotes — Webolge (anti-freeze)</legend>
+    <div class="toolbar">
+      <label>chunk <select id="selChunk">
+        <option>100</option><option>250</option><option selected>500</option><option>1000</option>
+      </select></label>
+      <button id="btnLote" class="principal">🧵 Traducir TODO por pasos</button>
+      <button id="btnPausa">⏸ Pausar</button>
+      <button id="btnReanuda">▶ Reanudar</button>
+      <button id="btnDescarga">💾 Descargar</button>
+    </div>
+    <div style="border:2px inset #FFF;background:#FFF;height:20px;">
+      <div id="barra" style="height:100%;width:0%;background:#0A246A;"></div>
+    </div>
+    <div class="label" id="loteLabel">sin trabajo activo</div>
+  </fieldset>
+
   <div class="grid">
     <fieldset>
       <legend>ENTRADA</legend>
