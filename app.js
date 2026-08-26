@@ -2,66 +2,66 @@ import { run } from "./src/malbolge-core.mjs";
 import { generar } from "./src/meowbolge-gen.mjs";
 
 const $ = (id) => document.getElementById(id);
-const txtHumano = $("txtHumano"), txtMalbolge = $("txtMalbolge"), txtSalida = $("txtSalida");
-const btnGen = $("btnGen"), btnRun = $("btnRun"), btnSwap = $("btnSwap");
-const genMeta = $("genMeta"), runMeta = $("runMeta"), outBadge = $("outBadge");
+const entrada = $("entrada"), salida = $("salida");
+const badge = $("badge"), metaIn = $("metaIn"), metaOut = $("metaOut");
 
-function setBadge(el, ok, texto) {
-  el.className = `badge ${ok ? "ok" : "err"}`;
-  el.textContent = texto;
+function setBadge(ok, txt) { badge.className = `badge ${ok ? "ok" : "err"}`; badge.textContent = txt; }
+
+function parecePrograma(src) {
+  if (src.length < 8) return false;
+  // sin espacios/saltos y todo imprimible -> candidata a programa
+  let raro = 0;
+  for (const ch of src) {
+    const v = ch.codePointAt(0);
+    if (v === 10 || v === 13 || v === 9 || v === 32) return false;
+    if (v < 33 || v > 126) raro++;
+  }
+  return raro === 0;
 }
 
-function copiar(texto) { return navigator.clipboard.writeText(texto); }
-
-btnGen.addEventListener("click", () => {
-  const texto = txtHumano.value;
-  if (!texto) return;
-  btnGen.disabled = true;
-  genMeta.textContent = "buscando rutas…";
-  setBadge(outBadge, false, "");
+$("btnConvert").addEventListener("click", () => {
+  const src = entrada.value;
+  if (!src.trim()) return;
+  const modo = $("modo").value;
+  const btn = $("btnConvert");
+  btn.disabled = true;
+  setBadge(false, "");
   setTimeout(() => {
     const t0 = performance.now();
     try {
-      const prog = generar(texto, { ancho: 10 });
-      txtMalbolge.value = prog;
-      const dt = Math.round(performance.now() - t0);
-      genMeta.textContent = `${prog.length} celdas · ${dt} ms`;
+      const esProg =
+        modo === "toText" ? true :
+        modo === "toMal" ? false :
+        parecePrograma(src);
+      if (esProg) {
+        const r = run(src, "", 5_000_000);
+        salida.value = r.output;
+        metaIn.textContent = `${src.length} caracteres`;
+        metaOut.textContent = `${r.steps} pasos`;
+        setBadge(r.status === "HALTED", r.status);
+      } else {
+        const prog = generar(src, { ancho: 10 });
+        salida.value = prog;
+        metaIn.textContent = `${src.length} caracteres`;
+        metaOut.textContent = `${prog.length} celdas`;
+        setBadge(true, "PROGRAMA GENERADO");
+      }
     } catch (e) {
-      genMeta.textContent = "";
-      alert("El generador cliente no encontró ruta para este texto.\n\n" +
-            "Límite honesto del modo local (los caracteres difíciles requieren el modo servidor).\n\n" + e.message);
+      salida.value = "";
+      metaOut.textContent = "";
+      setBadge(false, "sin ruta (modo cliente)");
     }
-    btnGen.disabled = false;
+    btn.disabled = false;
   }, 30);
 });
 
-btnRun.addEventListener("click", () => {
-  const prog = txtMalbolge.value;
-  if (!prog.trim()) return;
-  btnRun.disabled = true;
-  setTimeout(() => {
-    const t0 = performance.now();
-    try {
-      const stdinData = ""; // v1 sin entrada; fase 2 agrega campo de stdin
-      const r = run(prog, stdinData, 5_000_000);
-      txtSalida.value = r.output;
-      const dt = Math.round(performance.now() - t0);
-      runMeta.textContent = `${r.steps} pasos · ${dt} ms`;
-      const halted = r.status === "HALTED";
-      setBadge(outBadge, halted, halted ? "HALTED" : r.status);
-    } catch (e) {
-      txtSalida.value = String(e);
-      setBadge(outBadge, false, "ERROR");
-    }
-    btnRun.disabled = false;
-  }, 30);
+$("fileIn").addEventListener("change", async (ev) => {
+  const f = ev.target.files[0];
+  if (!f) return;
+  const buf = await f.arrayBuffer();
+  const texto = new TextDecoder("windows-1252").decode(buf);
+  entrada.value = texto;
+  metaIn.textContent = `${f.name} · ${texto.length} caracteres`;
+  const esMal = /\.(mal|malb|malbolge|mb)$/i.test(f.name);
+  $("modo").value = esMal ? "toText" : "auto";
 });
-
-btnSwap.addEventListener("click", async () => {
-  const t = txtHumano.value;
-  txtHumano.value = txtSalida.value || txtHumano.value;
-  txtSalida.value = t;
-});
-
-// doble-click en programa -> ejecutar rapido
-txtMalbolge.addEventListener("dblclick", () => btnRun.click());
