@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<style>
+  body { font-family: system-ui, sans-serif; margin: 0; background: #0d1117; color: #e6edf3; width: 380px; padding: 14px; box-sizing: border-box; }
+  h1 { font-size: 16px; margin: 0 0 8px; } h1 span { color: #ff7b72; }
+  textarea { width: 100%; height: 84px; background: #161b22; color: #e6edf3; border: 1px solid #30363d; border-radius: 6px; padding: 8px; font-family: ui-monospace, monospace; font-size: 12px; box-sizing: border-box; }
+  .row { display: flex; gap: 8px; margin-top: 8px; }
+  button { flex: 1; background: #238636; border: none; color: white; padding: 8px; border-radius: 6px; cursor: pointer; font-weight: 600; }
+  button.sec { background: #30363d; }
+  .meta { color: #8b949e; font-size: 11px; min-height: 14px; margin-top: 4px; white-space: pre-wrap; }
+  a { color: #58a6ff; font-size: 12px; display: inline-block; margin-top: 10px; text-decoration: none; }
+</style>
+</head>
+<body>
+<h1>malbolge<span>·</span>translate</h1>
+<textarea id="inp" placeholder="texto humano o programa malbolge"></textarea>
+<div class="meta" id="meta"></div>
+<div class="row">
+  <button id="bGen">→ Malbolge</button>
+  <button id="bRun" class="sec">▶ Ejecutar</button>
+</div>
+<a href="index.html" target="_blank">abrir página completa ↗</a>
+<script type="module" src="popup.js"></script>
+</body>
+</html>

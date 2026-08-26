@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Malbolge Translate</title>
+<style>
+  :root { color-scheme: dark; }
+  body { font-family: system-ui, sans-serif; margin: 0; background: #0d1117; color: #e6edf3; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 24px 16px 64px; }
+  h1 { font-size: 28px; margin: 0 0 4px; letter-spacing: .5px; }
+  h1 span { color: #ff7b72; }
+  .sub { color: #8b949e; margin-bottom: 20px; }
+  .grid { display: grid; grid-template-columns: 1fr auto 1fr; gap: 14px; align-items: start; }
+  textarea { width: 100%; min-height: 220px; background: #161b22; color: #e6edf3;
+             border: 1px solid #30363d; border-radius: 8px; padding: 10px;
+             font-family: ui-monospace, Consolas, monospace; font-size: 13px; box-sizing: border-box; }
+  textarea:focus { outline: 1px solid #58a6ff; }
+  .mid { display: flex; flex-direction: column; gap: 8px; padding-top: 60px; }
+  button { background: #238636; border: none; color: white; padding: 10px 16px;
+           border-radius: 6px; cursor: pointer; font-weight: 600; }
+  button.sec { background: #30363d; }
+  button:disabled { opacity: .5; cursor: wait; }
+  .label { font-size: 12px; color: #8b949e; margin-bottom: 4px; display:flex; justify-content: space-between; }
+  .badge { padding: 2px 8px; border-radius: 10px; font-size: 11px; }
+  .ok { background: #1b4721; color: #7ee787; }
+  .err { background: #5c2123; color: #ffa198; }
+  .meta { color: #8b949e; font-size: 12px; margin-top: 6px; min-height: 15px; }
+  footer { margin-top: 28px; color: #8b949e; font-size: 12px; }
+  code { background:#161b22; padding: 1px 5px; border-radius: 4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>malbolge<span>·</span>translate</h1>
+  <div class="sub">Traductor de Malbolge — texto ⇄ programa. Ejecución 100% local, cuarta implementación del consenso multi-backend.</div>
+  <div class="grid">
+    <div>
+      <div class="label"><span>TU TEXTO (idioma humano)</span><span id="genMeta" class="meta"></span></div>
+      <textarea id="txtHumano" placeholder="Hola mundo"> /\_/\
+( o.o )
+ > ^ <</textarea>
+      <div class="mid" style="padding-top:8px">
+        <button id="btnGen">Traducir a Malbolge →</button>
+        <div class="meta">Genera un programa real que IMPRIME tu texto (búsqueda congruencial verificada contra la máquina).</div>
+      </div>
+    </div>
+    <div class="mid">
+      <button id="btnSwap" class="sec" title="intercambiar">⇄</button>
+    </div>
+    <div>
+      <div class="label"><span>PROGRAMA MALBOLGE</span><span id="runMeta" class="meta"></span></div>
+      <textarea id="txtMalbolge" spellcheck="false" placeholder="(=&lt;`#9]~6ZY32..."></textarea>
+      <div class="mid" style="padding-top:8px">
+        <button id="btnRun">▶ Ejecutar → texto</button>
+        <div class="meta">Interpreta el programa localmente (semántica canónica op=(v+c)%94).</div>
+      </div>
+    </div>
+  </div>
+  <div style="margin-top:14px">
+    <div class="label"><span>SALIDA DE LA MÁQUINA</span><span id="outBadge"></span></div>
+    <textarea id="txtSalida" readonly></textarea>
+  </div>
+  <footer>
+    Núcleo verificado contra vectores dorados triple-backend: hello=48 pasos · gatito=652 ·
+    ECHO13=27 · TRANSFORM=53. Límite honesto: el generador cliente cubre un subconjunto de
+    textos; los difíciles requieren el modo servidor (fase 2).
+  </footer>
+</div>
+<script type="module" src="app.js"></script>
+</body>
+</html>

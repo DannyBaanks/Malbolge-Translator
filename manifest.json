@@ -1,0 +1,11 @@
+{
+  "manifest_version": 3,
+  "name": "Malbolge Translate",
+  "version": "0.1.0",
+  "description": "Google Translate, pero de Malbolge: texto -> programa Malbolge y programa -> salida. Ejecucion 100% local en tu navegador.",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Malbolge Translate"
+  },
+  "options_page": "index.html"
+}
