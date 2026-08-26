@@ -62,8 +62,9 @@ const ART = " /\\_/\\\n( o.o )\n > ^ <";
     ok = r.output === "meow" && r.status === "HALTED";
     detalle = `${prog.length} celdas, ${r.steps} pasos`;
   } catch (e) {
-    ok = String(e.message).startsWith("sin ruta");
-    detalle = `limite alcanzado rapido (${Date.now() - t0}ms): ${e.message.slice(0, 60)}`;
+    const msg = String(e.message || e);
+    ok = msg.startsWith("sin ruta") || msg.startsWith("GEN_TIMEOUT");
+    detalle = `limite alcanzado rapido (${Date.now() - t0}ms): ${msg.slice(0, 60)}`;
   }
   check("V5 generar(meow) acotado", ok && Date.now() - t0 < 60000, detalle);
 }

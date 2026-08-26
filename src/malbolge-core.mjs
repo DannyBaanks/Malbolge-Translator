@@ -61,7 +61,8 @@ export function encryptCell(v) {
   return (v >= 33 && v <= 126) ? ENC.get(v) : v;
 }
 
-export function run(source, stdinData = "", maxSteps = 2000000) {
+export function run(source, stdinData = "", maxSteps = 2000000, opts = {}) {
+  const maxOutput = opts.maxOutput ?? Number.POSITIVE_INFINITY;
   const { mem, invalidAt } = loadMemory(source);
   if (mem === null) {
     return { output: "", steps: 0, status: `INVALID:non-printable source char at ${invalidAt}`, counts: null };
@@ -89,6 +90,9 @@ export function run(source, stdinData = "", maxSteps = 2000000) {
       }
       case OP_OUT:
         out.push(a % 256);
+        if (out.length >= maxOutput) {
+          return { output: latin1(out), steps, status: "MAX_OUTPUT", counts };
+        }
         break;
       case OP_IN:
         a = si < stdinCodes.length ? stdinCodes[si++] : -1;

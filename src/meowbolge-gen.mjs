@@ -25,7 +25,7 @@ function* combinaciones(largo) {
   }
 }
 
-function proponerRutas(prefijo, objetivo, restrictPast) {
+function proponerRutas(prefijo, objetivo, restrictPast, expirado = () => false) {
   const loaded = loadMemory(prefijo + colaHalt(prefijo.length));
   if (!loaded.mem) return [];
   const mem = loaded.mem;
@@ -49,6 +49,7 @@ function proponerRutas(prefijo, objetivo, restrictPast) {
   for (let prof = 0; prof <= PROF_MAX; prof++) {
     const nueva = [];
     for (const [aAct, dAct, ruta] of frontera) {
+      if (expirado()) return metas;
       const pos = desde + ruta.length;
       presupuesto--;
       for (const op of [OP_OUT, OP_ROT, OP_CRAZY, OP_MOVD]) {
@@ -100,10 +101,20 @@ function verificarRuta(fuente, ruta, objetivo) {
   return run(cand + colaHalt(cand.length)).output === objetivo ? cand : null;
 }
 
+export class GenTimeout extends Error {}
+
 export function generar(texto, opts = {}) {
-  const { rapido = true, ancho = 40, verbose = false, log = console.error } = opts;
+  const { rapido = true, ancho = 40, verbose = false, log = console.error,
+          deadlineMs = Number.POSITIVE_INFINITY } = opts;
+  const t0 = Date.now();
+  const expirado = () => Date.now() - t0 > deadlineMs;
   let fuente = "";
   for (let i = 0; i < texto.length; i++) {
+    if (expirado()) {
+      throw new GenTimeout(
+        `GEN_TIMEOUT: ${texto.length} chars, rindiendose en el ${i + 1} ` +
+        `(${JSON.stringify(texto[i])}) tras ${deadlineMs} ms`);
+    }
     const ch = texto[i];
     const objetivo = texto.slice(0, i + 1);
     let hallado = null, metodo = null;
@@ -117,7 +128,7 @@ export function generar(texto, opts = {}) {
       const byteObj = texto.charCodeAt(i) % 256;
       outer:
       for (const restrict of [true, false]) {
-        for (const ruta of proponerRutas(fuente, byteObj, restrict)) {
+        for (const ruta of proponerRutas(fuente, byteObj, restrict, expirado)) {
           const cand = verificarRuta(fuente, ruta, objetivo);
           if (cand !== null) { hallado = cand; metodo = "rapida"; break outer; }
         }
@@ -126,6 +137,11 @@ export function generar(texto, opts = {}) {
 
     if (hallado === null) {
       for (const combo of iterarBruta(ancho)) {
+        if (expirado()) {
+          throw new GenTimeout(
+            `GEN_TIMEOUT: caracter ${JSON.stringify(ch)} (${i + 1}/${texto.length}) ` +
+            `excedio ${deadlineMs} ms en modo cliente`);
+        }
         let cand = fuente, ok = true;
         for (const op of combo) {
           const c = fuentePara(op, cand.length);

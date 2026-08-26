@@ -9,14 +9,22 @@ const analisis = $("analisis");
 function setBadge(ok, txt) { badge.className = `badge ${ok ? "ok" : "err"}`; badge.textContent = txt; }
 
 function parecePrograma(src) {
-  if (src.length < 8) return false;
-  let raro = 0;
-  for (const ch of src) {
+  // recorta whitespace pegado; un programa real no lleva espacios internos
+  const t = src.trim();
+  if (t.length < 8) return false;
+  for (const ch of t) {
     const v = ch.codePointAt(0);
-    if (v === 10 || v === 13 || v === 9 || v === 32) return false;
-    if (v < 33 || v > 126) raro++;
+    if (v === 10 || v === 13 || v === 9 || v === 32 || v < 33 || v > 126) return false;
   }
-  return raro === 0;
+  return true;
+}
+
+function sondeaPrograma(src) {
+  // prueba rapida: si HALTA al correr, es programa (aunque su salida sea vacia)
+  try {
+    const r = run(src.trim(), "", 150_000, { maxOutput: 50_000 });
+    return r.status === "HALTED";
+  } catch { return false; }
 }
 
 function walbolgeLite(r) {
@@ -49,10 +57,10 @@ $("btnConvert").addEventListener("click", () => {
       const esProg =
         modo === "toText" ? true :
         modo === "toMal" ? false :
-        parecePrograma(src);
+        (parecePrograma(src) ? sondeaPrograma(src) : false);
       if (esProg) {
-        const r = run(src, "", 5_000_000);
-        salida.value = r.output;
+        const r = run(src, "", 2_000_000, { maxOutput: 300_000 });
+        salida.value = r.output + (r.status === "MAX_OUTPUT" ? "\n…[salida truncada]" : "");
         metaIn.textContent = `${src.length} caracteres`;
         metaOut.textContent = `${r.steps} pasos`;
         setBadge(r.status === "HALTED", r.status);
@@ -60,7 +68,7 @@ $("btnConvert").addEventListener("click", () => {
           `estado: ${r.status}   pasos: ${r.steps}   salida: ${r.output.length} bytes\n` +
           walbolgeLite(r);
       } else {
-        const prog = generar(src, { ancho: 10 });
+        const prog = generar(src, { ancho: 10, deadlineMs: 15000 });
         salida.value = prog;
         metaIn.textContent = `${src.length} caracteres`;
         metaOut.textContent = `${prog.length} celdas`;
@@ -72,8 +80,12 @@ $("btnConvert").addEventListener("click", () => {
     } catch (e) {
       salida.value = "";
       metaOut.textContent = "";
-      setBadge(false, "sin ruta (modo cliente)");
-      analisis.textContent = "error: " + e.message;
+      const timeout = String(e.message || e).startsWith("GEN_TIMEOUT");
+      setBadge(false, timeout ? "texto difícil (timeout)" : "sin ruta (modo cliente)");
+      analisis.textContent = timeout
+        ? "El generador cliente se rindió a tiempo para no congelar la página.\n" +
+          "Los caracteres difíciles necesitan el modo servidor (fase 2)."
+        : "error: " + (e.message || e);
     }
     btn.disabled = false;
   }, 30);
