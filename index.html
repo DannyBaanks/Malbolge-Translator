@@ -39,8 +39,8 @@
 <body>
 <div class="titlebar"><span>malbolge·translate — [Traductor de Malbolge]</span><span class="x">✕</span></div>
 <div class="wrap">
-  <h1>malbolge<span>·</span>translate <small style="font-weight:normal;color:#666">v0.2 — edición 2003</small></h1>
-  <div class="sub">Traductor de Malbolge con detección automática de dirección. Ejecución 100% local en tu máquina.</div>
+  <h1>malbolge<span>·</span>translate <small style="font-weight:normal;color:#666">v0.3 — edición 2003</small></h1>
+  <div class="sub">Texto ⇄ Malbolge ejecutable. Generación y verificación 100% local en tu navegador.</div>
 
   <div class="toolbar">
     <label class="file">📂 Cargar archivo…<input type="file" id="fileIn" accept=".txt,.py,.js,.md,.json,.csv,.mal,.malb,.malbolge,.mb"></label>
@@ -74,7 +74,7 @@
     <fieldset>
       <legend>ENTRADA</legend>
       <div class="label"><span id="metaIn">&nbsp;</span></div>
-      <textarea id="entrada" spellcheck="false" placeholder="escribe texto, carga un .py/.txt, o pega un programa malbolge"></textarea>
+      <textarea id="entrada" spellcheck="false" placeholder="escribe hola, carga un .py/.txt, o pega un programa Malbolge"></textarea>
     </fieldset>
     <fieldset>
       <legend>SALIDA</legend>
@@ -88,8 +88,11 @@
     <div id="analisis">— ejecute o convierta para ver la traza estructural —</div>
   </fieldset>
 
-  <footer>Núcleo verificado contra vectores dorados triple-backend: hello=48 · gatito=652 · ECHO13=27 · TRANSFORM=53.
-  Generador cliente cubre un subconjunto de textos; los difíciles, modo servidor (fase 2). Mejor visto en 800×600.</footer>
+  <footer>
+    Cada programa mostrado por el modo rápido se vuelve a ejecutar y debe producir exactamente la entrada antes de marcarse VERIFICADO.
+    El modo por lotes genera programas independientes por chunk (no concatenables como un único .mal). Alcance actual del generador: bytes Latin-1 (0..255).
+    Mejor visto en 800×600.
+  </footer>
 </div>
 <script type="module" src="app.js"></script>
 </body>
