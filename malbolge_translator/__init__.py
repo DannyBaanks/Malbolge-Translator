@@ -11,6 +11,7 @@ try:
     from .anchor import AnchorManager, AnchorState, WordBank, BankEntry
 except Exception:  # malbolge-generator not installed
     AnchorManager = AnchorState = WordBank = BankEntry = None  # type: ignore[assignment]
+from .two_part_roundtrip import DEFAULT_MAX_PART_BYTES, run_two_part_roundtrip, split_utf8_halves
 from .roundtrip import (
     CODEC_VERSION,
     RoundtripDecodeResult,
@@ -29,6 +30,9 @@ __all__ = [
     "WordResult",
     "RoundtripResult",
     "RoundtripVerification",
+    "DEFAULT_MAX_PART_BYTES",
+    "run_two_part_roundtrip",
+    "split_utf8_halves",
     "Lexicon",
     "transliterate",
     "DEFAULT_LEXICON",

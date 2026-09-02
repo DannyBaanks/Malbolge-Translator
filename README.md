@@ -57,6 +57,9 @@ malbolge-translate "你好" --direct --execute
 malbolge-translate "你好，世界 😭🔥" --direct --roundtrip --execute
 malbolge-translate "Hola, señor. ¿Cómo estás?" --direct --roundtrip --execute
 
+# Bounded two-part UTF-8 transport: two independent programs, one per half
+malbolge-translate "Hi :p" --direct --roundtrip --two-part --output-dir two_part_out
+
 # Translate file
 malbolge-translate input.txt --output-dir out --execute
 malbolge-translate input.txt --roundtrip --output-dir out --execute
@@ -106,10 +109,23 @@ TRANSLITERATION_REVERSIBLE = FALSE
 ROUNDTRIP_BYTE_EXACT = TRUE only for passing verified runs
 FULL_DON_QUIJOTE_UTF8_ROUNDTRIP = NOT_DEMONSTRATED
 ARBITRARY_SIZE_ROUNDTRIP = NOT_DEMONSTRATED
+FRESH_VM_CONTINUATION = NOT_DEMONSTRATED
 ```
 
 Roundtrip mode can preserve arbitrary valid UTF-8 text byte-for-byte, subject to Malbolge synthesis/execution resource limits.
 Do not claim "supports every language" — it is byte transport, not linguistic coverage.
+
+### Two-Part Roundtrip
+
+`--two-part` splits valid UTF-8 at a byte-safe boundary and applies the existing
+MALRT1 roundtrip to each half. `independent` (the default) synthesizes and
+verifies both programs; `verify-first` persists and rereads proof for part one
+only, so it deliberately returns `PART_1_ROUNDTRIP_ONLY` rather than a full-file
+claim. `--max-part-bytes` defaults to 4096 and rejects larger parts before
+writing artifacts.
+
+This is a bounded transport convenience, not cross-VM continuation and not
+evidence that the full Don Quixote can be generated or executed.
 
 ```python
 from malbolge_translator import MalbolgeTranslator, encode_roundtrip, decode_roundtrip
@@ -162,6 +178,7 @@ ROUNDTRIP: PASS
 |--------|---------|
 | `translator.py` | Main translation pipeline: lexicon → split → synthesize → chain + `translate_roundtrip` / `verify_roundtrip` |
 | `roundtrip.py` | Reversible UTF-8 codec: `MALRT1:<base64>:<sha256>` (no Malbolge logic) |
+| `two_part_roundtrip.py` | Bounded two-program MALRT1 workflow and persisted verification |
 | `anchor.py` | AnchorManager, WordBank — canonical states & continuation cache |
 | `lexicon.py` | User-extensible character mappings (transliteration/encoding) |
 | `cli.py` | Command-line interface (`--roundtrip`, `--show-program`) |

@@ -42,6 +42,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--seed", type=int, default=42, help="Random seed (default: 42)")
     parser.add_argument("--no-lexicon", action="store_true", help="Disable Unicode transliteration")
     parser.add_argument("--roundtrip", action="store_true", help="Use byte-exact UTF-8 roundtrip mode (MALRT1 envelope, reversible, no transliteration)")
+    parser.add_argument("--two-part", action="store_true", help="Split UTF-8 input into two continuous halves for bounded roundtrip processing.")
+    parser.add_argument("--two-part-mode", choices=("independent", "verify-first"), default="independent", help="Two-part mode: two programs, or phase-two reads and verifies part 1 only.")
+    parser.add_argument("--max-part-bytes", type=int, default=4096, help="Safety limit per two-part payload (default: 4096).")
     parser.add_argument("--show-program", action="store_true", help="Print full Malbolge program (otherwise only sizes)")
     
     parser.add_argument("--output-dir", type=Path, default="malbolge_output", help="Output directory")
@@ -92,10 +95,31 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("No input text provided")
     
     # --------------------------------------------------
-    # ROUNDTRIP MODE — byte-exact UTF-8
+    # ROUNDTRIP MODE — byte-exact UTF-8 (single or two-part)
     # --------------------------------------------------
     if args.roundtrip:
         import hashlib
+        if args.two_part:
+            from .two_part_roundtrip import run_two_part_roundtrip
+            try:
+                manifest = run_two_part_roundtrip(
+                    text,
+                    args.output_dir,
+                    translator,
+                    mode=args.two_part_mode,
+                    max_part_bytes=args.max_part_bytes,
+                    max_steps=args.max_steps,
+                )
+            except ValueError as exc:
+                print(f"[ERROR] {exc}")
+                return 1
+            print(f"[SUMMARY] Two-part mode: {manifest['mode']}")
+            print(f"  Source bytes: {manifest['source_bytes']}")
+            print(f"  Part bytes: {[part['bytes'] for part in manifest['parts']]}")
+            print(f"  Whole roundtrip: {manifest['whole_roundtrip_pass']}")
+            return 0 if manifest["whole_roundtrip_pass"] else 1
+
+        # Single-payload roundtrip (existing)
         print(f"[INFO] Mode: UTF-8 roundtrip")
         print(f"[INFO] Input: {len(text)} chars, {len(text.encode('utf-8'))} bytes UTF-8")
         from .roundtrip import CODEC_VERSION
