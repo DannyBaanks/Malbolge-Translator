@@ -58,3 +58,8 @@ artifacts/quijote/*.op
 
 # Logs
 *.log
+# Local build wheels
+*.whl
+gcm-diagnose.log
+build/
+*.log
