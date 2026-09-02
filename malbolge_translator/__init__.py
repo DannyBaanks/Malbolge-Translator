@@ -5,15 +5,30 @@ A standalone tool for translating any text (including Unicode) into
 executable Malbolge programs using anchor harness technology.
 """
 
-from .translator import MalbolgeTranslator, TranslationResult, WordResult
+from .translator import MalbolgeTranslator, TranslationResult, WordResult, RoundtripResult, RoundtripVerification
 from .lexicon import Lexicon, transliterate, DEFAULT_LEXICON
-from .anchor import AnchorManager, AnchorState, WordBank, BankEntry
+try:
+    from .anchor import AnchorManager, AnchorState, WordBank, BankEntry
+except Exception:  # malbolge-generator not installed
+    AnchorManager = AnchorState = WordBank = BankEntry = None  # type: ignore[assignment]
+from .roundtrip import (
+    CODEC_VERSION,
+    RoundtripDecodeResult,
+    RoundtripEnvelope,
+    RoundtripStatus,
+    decode_roundtrip,
+    decode_roundtrip_detailed,
+    encode_roundtrip,
+    encode_roundtrip_envelope,
+)
 
 __version__ = "1.0.0"
 __all__ = [
     "MalbolgeTranslator",
-    "TranslationResult", 
+    "TranslationResult",
     "WordResult",
+    "RoundtripResult",
+    "RoundtripVerification",
     "Lexicon",
     "transliterate",
     "DEFAULT_LEXICON",
@@ -21,4 +36,12 @@ __all__ = [
     "AnchorState",
     "WordBank",
     "BankEntry",
+    "CODEC_VERSION",
+    "RoundtripEnvelope",
+    "RoundtripDecodeResult",
+    "RoundtripStatus",
+    "encode_roundtrip",
+    "encode_roundtrip_envelope",
+    "decode_roundtrip",
+    "decode_roundtrip_detailed",
 ]

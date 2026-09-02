@@ -41,6 +41,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-depth", type=int, default=5, help="Max search depth (default: 5)")
     parser.add_argument("--seed", type=int, default=42, help="Random seed (default: 42)")
     parser.add_argument("--no-lexicon", action="store_true", help="Disable Unicode transliteration")
+    parser.add_argument("--roundtrip", action="store_true", help="Use byte-exact UTF-8 roundtrip mode (MALRT1 envelope, reversible, no transliteration)")
+    parser.add_argument("--show-program", action="store_true", help="Print full Malbolge program (otherwise only sizes)")
     
     parser.add_argument("--output-dir", type=Path, default="malbolge_output", help="Output directory")
     parser.add_argument("--base-name", default="output", help="Base filename")
@@ -89,6 +91,92 @@ def main(argv: list[str] | None = None) -> int:
     if not text:
         parser.error("No input text provided")
     
+    # --------------------------------------------------
+    # ROUNDTRIP MODE — byte-exact UTF-8
+    # --------------------------------------------------
+    if args.roundtrip:
+        import hashlib
+        print(f"[INFO] Mode: UTF-8 roundtrip")
+        print(f"[INFO] Input: {len(text)} chars, {len(text.encode('utf-8'))} bytes UTF-8")
+        from .roundtrip import CODEC_VERSION
+
+        def progress_rt(i, total, word):
+            if i % 10 == 0:
+                print(f"  Progress: {i+1}/{total} words")
+
+        result = translator.translate_roundtrip(text, progress_callback=progress_rt)
+
+        # Synthesis status
+        if not result.success:
+            print(f"[ERROR] Malbolge synthesis failed: {result.translation.words[0].error}")
+            result.save_all(args.output_dir, args.base_name)
+            translator.save_cache()
+            print(f"\n[SUMMARY]")
+            print(f"  Mode: UTF-8 roundtrip")
+            print(f"  Codec: {CODEC_VERSION}")
+            print(f"  Original bytes: {len(result.original_bytes)}")
+            print(f"  Encoded payload chars: {len(result.encoded_payload)}")
+            print(f"  Malbolge program chars: 0 (synthesis failed)")
+            print(f"  MALBOLGE_SYNTHESIS: FAIL")
+            print(f"  END_TO_END_ROUNDTRIP: NOT_DEMONSTRATED")
+            return 1
+
+        result.save_all(args.output_dir, args.base_name)
+        translator.save_cache()
+
+        payload_sha = hashlib.sha256(result.encoded_payload.encode("utf-8")).hexdigest()
+
+        print(f"\n[SUMMARY]")
+        print(f"  Mode: UTF-8 roundtrip")
+        print(f"  Codec: {result.codec_version}")
+        print(f"  Original bytes: {len(result.original_bytes)}")
+        print(f"  Encoded payload chars: {len(result.encoded_payload)}")
+        print(f"  Malbolge program chars: {len(result.translation.full_program)}")
+        print(f"  Malbolge opcodes: {len(result.translation.full_opcodes)}")
+        print(f"  Payload SHA256: {payload_sha[:16]}...")
+        print(f"  Original SHA256: {result.original_sha256[:16]}...")
+        print(f"  Evaluations: {result.translation.stats.get('evaluations',0)}")
+        print(f"  Time: {result.translation.stats.get('duration_s',0):.2f}s")
+        if args.show_program:
+            print(f"\n[PROGRAM PREVIEW]\n{result.translation.full_program[:500]}...")
+
+        if args.execute:
+            print()
+            ver = translator.verify_roundtrip(result, max_steps=args.max_steps)
+            # Layered output
+            print(f"[EXECUTION]")
+            print(f"  Execution: {ver.malbolge_execution_status}")
+            print(f"  Steps: {ver.malbolge_steps}")
+            print(f"  Payload match: {str(ver.payload_match).upper() if ver.payload_match is not None else 'UNKNOWN'}")
+            print(f"  UTF-8 bytes match: {str(ver.bytes_equal).upper() if ver.bytes_equal is not None else 'UNKNOWN'}")
+            print(f"  SHA256 match: {str(ver.sha_equal).upper() if ver.sha_equal is not None else 'UNKNOWN'}")
+            print(f"  Text equal: {str(ver.text_equal).upper() if ver.text_equal is not None else 'UNKNOWN'}")
+            print(f"  Codec roundtrip: {ver.codec_roundtrip}")
+            print(f"  Malbolge synthesis: {ver.malbolge_synthesis}")
+            print(f"  End-to-end: {ver.end_to_end_roundtrip}")
+            print(f"  Original bytes: {ver.original_utf8_bytes}")
+            print(f"  Encoded payload bytes/chars: {ver.encoded_payload_chars}")
+            print(f"  Malbolge program chars: {ver.malbolge_program_chars}")
+            print(f"  Original SHA256: {ver.original_utf8_sha256}")
+            print(f"  Recovered SHA256: {ver.recovered_utf8_sha256}")
+            print(f"\nROUNDTRIP: {'PASS' if ver.roundtrip_pass else 'FAIL'}")
+            if ver.error:
+                print(f"  Error: {ver.error}")
+            # also save verification JSON alongside manifest
+            try:
+                import json as _json
+                vpath = args.output_dir / f"{args.base_name}_roundtrip_verification.json"
+                vpath.write_text(_json.dumps(ver.to_dict(), ensure_ascii=False, indent=2), encoding="utf-8")
+                print(f"[OK] Verification saved to {vpath}")
+            except Exception:
+                pass
+            return 0 if ver.roundtrip_pass else 1
+        return 0
+
+    # --------------------------------------------------
+    # TRANSLITERATION MODE (existing, lossy, default)
+    # --------------------------------------------------
+    print(f"[INFO] Mode: transliteration (lossy, human-readable)")
     print(f"[INFO] Input: {len(text)} chars")
     
     # Translate
@@ -103,12 +191,15 @@ def main(argv: list[str] | None = None) -> int:
     translator.save_cache()
     
     print(f"\n[SUMMARY]")
+    print(f"  Mode: transliteration")
     print(f"  Words: {len(result.words)}")
     print(f"  Opcodes: {len(result.full_opcodes)}")
     print(f"  Program: {len(result.full_program)} chars")
     print(f"  Evaluations: {result.stats['evaluations']}")
     print(f"  Time: {result.stats['duration_s']:.2f}s")
     print(f"  Anchors: {result.stats['anchors_used']}")
+    if args.show_program:
+        print(f"  Program: {result.full_program[:500]}...")
     
     # Execute
     if args.execute:
