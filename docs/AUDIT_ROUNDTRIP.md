@@ -1,8 +1,8 @@
 # AUDIT — UTF-8 Roundtrip over Malbolge (2026-09-02)
 
-**Repo:** Malbolge-Translator (`git rev-parse --show-toplevel` = `C:/Development/ISyCo Git/Malbolge-Translator`)
+**Repo:** Malbolge-Translator (verified with `git rev-parse --show-toplevel` in the author's local checkout)
 **Branch:** master (pushed b714728, now updated)
-**Generator available:** `malbolge-generator` vendored at `C:\Development\ISyCo\workspace\malbolge_toolkit` (Wallstop toolkit, `pip install -e` 0.1.0, Python 3.12) — installed after initial codec-only pass. **Nota:** tu `malbolge-opera-solver` ya hace búsqueda Malbolge; no era necesario bajar wallstop de internet, el toolkit ya estaba vendored en ISyCo. Usamos ese (mismo `ProgramGenerator`).
+**Generator available:** `malbolge-generator` vendored from the author's ISyCo monorepo (`workspace/malbolge_toolkit`; Wallstop toolkit, `pip install -e` 0.1.0, Python 3.12) — installed after initial codec-only pass. **Nota:** tu `malbolge-opera-solver` ya hace búsqueda Malbolge; no era necesario bajar wallstop de internet, el toolkit ya estaba vendored en ISyCo. Usamos ese (mismo `ProgramGenerator`).
 **Date:** 2026-09-02
 **Transliterator preserved:** yes
 
