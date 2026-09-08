@@ -7,6 +7,11 @@ executable Malbolge programs using anchor harness technology.
 
 from .translator import MalbolgeTranslator, TranslationResult, WordResult, RoundtripResult, RoundtripVerification
 from .lexicon import Lexicon, transliterate, DEFAULT_LEXICON
+from .fresh_vm_continuation import (
+    FreshVMContinuationEvidence,
+    run_fresh_vm_continuation,
+    split_opcodes,
+)
 try:
     from .anchor import AnchorManager, AnchorState, WordBank, BankEntry
 except Exception:  # malbolge-generator not installed
@@ -48,4 +53,7 @@ __all__ = [
     "encode_roundtrip_envelope",
     "decode_roundtrip",
     "decode_roundtrip_detailed",
+    "FreshVMContinuationEvidence",
+    "run_fresh_vm_continuation",
+    "split_opcodes",
 ]

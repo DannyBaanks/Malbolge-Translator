@@ -1,0 +1,69 @@
+{
+  "tool": "malbolge-translator fresh-VM continuation evidence",
+  "environment": {
+    "python": "3.12.4 (tags/v3.12.4:8e8a4ba, Jun  6 2024, 19:30:16) [MSC v.1940 64 bit (AMD64)]",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "cases": [
+    {
+      "program_opcodes_len": 476,
+      "split_at": 238,
+      "full_output": "Hello, World!",
+      "full_steps": 378,
+      "full_halt_reason": "halt_opcode",
+      "prefix_output": "Hello",
+      "prefix_steps": 140,
+      "prefix_tape_len": 238,
+      "suffix_output": ", World!",
+      "suffix_steps": 238,
+      "suffix_halt_reason": "halt_opcode",
+      "concatenated_output": "Hello, World!",
+      "concatenation_match": true,
+      "full_output_sha256": "dffd6021bb2bd5b0af676290809ec3a53191dd81c7f70a4b28688a362182986f",
+      "suffix_output_sha256": "11d862ebcb5aad6fd81dd3058bd49f80e3871869427ab7d9d8a0b44c9f8cd9c3",
+      "fresh_vm_continuation_pass": true,
+      "error": null
+    },
+    {
+      "program_opcodes_len": 527,
+      "split_at": 263,
+      "full_output": "Hola mundo",
+      "full_steps": 429,
+      "full_halt_reason": "halt_opcode",
+      "prefix_output": "H",
+      "prefix_steps": 165,
+      "prefix_tape_len": 263,
+      "suffix_output": "ola mundo",
+      "suffix_steps": 264,
+      "suffix_halt_reason": "halt_opcode",
+      "concatenated_output": "Hola mundo",
+      "concatenation_match": true,
+      "full_output_sha256": "ca8f60b2cc7f05837d98b208b57fb6481553fc5f1219d59618fd025002a66f5c",
+      "suffix_output_sha256": "2220622b62ffa648847c91cd587a22769b087bbd5837529ad54aae4d6d0b879f",
+      "fresh_vm_continuation_pass": true,
+      "error": null
+    },
+    {
+      "program_opcodes_len": 1023,
+      "split_at": 511,
+      "full_output": "Bounded continuation over Classic Malbolge",
+      "full_steps": 925,
+      "full_halt_reason": "halt_opcode",
+      "prefix_output": "Bounded continua",
+      "prefix_steps": 413,
+      "prefix_tape_len": 511,
+      "suffix_output": "tion over Classic Malbolge",
+      "suffix_steps": 512,
+      "suffix_halt_reason": "halt_opcode",
+      "concatenated_output": "Bounded continuation over Classic Malbolge",
+      "concatenation_match": true,
+      "full_output_sha256": "7ca2aa60916cf6eda78a6eed8e9e1ed8d5bfdf76a348dcb39c0535e94315b208",
+      "suffix_output_sha256": "0dce368f2017736bba367fac074d69b79b5c660fc4089056af1b71987d939951",
+      "fresh_vm_continuation_pass": true,
+      "error": null
+    }
+  ],
+  "claim": {
+    "FRESH_VM_CONTINUATION": "DEMONSTRATED"
+  }
+}

@@ -107,13 +107,34 @@ Propiedades: payload legible = irrelevante, reversible = si, byte exact = si cua
 MALBOLGE_NATIVE_UNICODE = FALSE
 TRANSLITERATION_REVERSIBLE = FALSE
 ROUNDTRIP_BYTE_EXACT = TRUE solo para runs verificadas que pasan
-FULL_DON_QUIJOTE_UTF8_ROUNDTRIP = NOT_DEMONSTRATED
-ARBITRARY_SIZE_ROUNDTRIP = NOT_DEMONSTRATED
-FRESH_VM_CONTINUATION = NOT_DEMONSTRATED
+FRESH_VM_CONTINUATION = DEMONSTRATED (snapshot serializado + VM fresca, output byte-identico)
+FULL_DON_QUIJOTE_UTF8_ROUNDTRIP = NOT_DEMONSTRATED (acotado por costo de sintesis)
+ARBITRARY_SIZE_ROUNDTRIP = NOT_DEMONSTRATED (el codec es arbitrario; la sintesis Malbolge es acotada)
 ```
 
 El modo roundtrip puede preservar texto UTF-8 valido arbitrario byte por byte, sujeto a limites de recursos de sintesis/ejecucion de Malbolge.
 No reclames "soporta todos los idiomas" — es transporte de bytes, no cobertura linguistica.
+
+### Continuacion en VM fresca
+
+`malbolge_translator.fresh_vm_continuation` demuestra que un programa Malbolge
+puede detenerse a mitad de vuelo, serializar su estado de maquina
+(tape + `a`/`c`/`d` + `halted`), y terminar en un `MalbolgeInterpreter()`
+**nuevo** produciendo output byte-identico. La propiedad verificada es
+`prefijo.output + sufijo.output == correda.completa.output`, apoyandose en
+`MalbolgeMachine.copy()` y `execute_from_snapshot()` del toolkit (que
+reverse-normaliza el sufijo en la posicion absoluta correcta).
+
+```python
+from malbolge import ProgramGenerator
+from malbolge_translator import run_fresh_vm_continuation
+
+opcodes = ProgramGenerator().generate_for_string("Hello, World!").opcodes
+evidence = run_fresh_vm_continuation(opcodes)
+assert evidence.fresh_vm_continuation_pass
+```
+
+Evidencia: `evidence/fresh_vm_continuation/evidence.json` (3/3 PASS).
 
 ### Roundtrip de Dos Partes
 

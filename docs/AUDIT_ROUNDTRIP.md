@@ -48,6 +48,30 @@ ARBITRARY_SIZE_ROUNDTRIP = NOT_DEMONSTRATED
 MALBOLGE_NATIVE_UNICODE = FALSE
 ```
 
+## Preserved positive claim — FRESH_VM_CONTINUATION (2026-09-07)
+
+`FRESH_VM_CONTINUATION` fue promovido de `NOT_DEMONSTRATED` a `DEMONSTRATED`.
+Un programa Malbolge se detiene a mitad, su estado de maquina se serializa
+(`MalbolgeMachine.copy()`), y el sufijo se ejecuta en un
+`MalbolgeInterpreter()` **nuevo** via `execute_from_snapshot()`. La propiedad
+verificada es `prefijo.output + sufijo.output == corrida.completa.output`.
+
+```
+FRESH_VM_CONTINUATION = DEMONSTRATED
+```
+
+| text | split | prefix | suffix | pass |
+|---|---|---|---|---|
+| `Hello, World!` | 238 | `Hello` | `, World!` | TRUE |
+| `Hola mundo` | 263 | `H` | `ola mundo` | TRUE |
+| `Bounded continuation over Classic Malbolge` | 511 | `Bounded continua` | `tion over Classic Malbolge` | TRUE |
+
+Evidencia: `evidence/fresh_vm_continuation/evidence.json`; pruebas
+`tests/test_fresh_vm_continuation.py` (5 passed). Nota: el split debe caer en
+un punto donde el sufijo no referencie celdas de datos que la cinta del prefijo
+trunco (un split arbitrario `N//4` puede leer celdas crazy-filled y emitir
+basura); el midpoint usado aqui conserva las celdas de datos intactas.
+
 ## Evidence — ahora con corrida real
 
 - **Codec:** `malbolge_translator/roundtrip.py:1` — `MALRT1:<base64(utf8)>:<sha256>` ; `encode_roundtrip`/`decode_roundtrip_detailed` `VALID`/`INVALID`/`CORRUPTED`.
@@ -94,6 +118,7 @@ Extendidos: `你好，世界` (payload 92 → prog 2397, steps 2299, PASS), `�
 CODEC_ROUNDTRIP = PASS (8/8)
 MALBOLGE_SYNTHESIS = PASS (8/8 small, HALTED)
 END_TO_END_ROUNDTRIP = PASS (8/8, sha256 recovered == original, bytes_equal)
+FRESH_VM_CONTINUATION = DEMONSTRATED (3/3, byte-identico, 2026-09-07)
 FULL_DON_QUIJOTE_UTF8_ROUNDTRIP = NOT_DEMONSTRATED (no intentado, por diseño)
 ARBITRARY_SIZE_ROUNDTRIP = NOT_DEMONSTRATED (no claim)
 ```
@@ -125,6 +150,7 @@ Python Translator creates MALRT1 → Malbolge → Webolge JS executes/decodes �
 - Payloads grandes (> ~200 chars base64) aumentan `malbolge_chars` y `steps`; presupuesto `max_search_depth=5` puede necesitar `TIMEOUT` → clasificar, no mentir.
 - Webolge aún Latin-1 limited; el formato `MALRT1` ya está listo para port JS (`TextEncoder → Base64 → SHA-256`, mismo SHA), pero `Webolge supports roundtrip` sigue `FALSE` hasta implementación.
 - `malbolge-generator` ahora instalado vendored; si se desinstala, el fallback vuelve a `NOT_DEMONSTRATED` explícito (no `?`).
+- `FRESH_VM_CONTINUATION` está demostrado solo en splits `midpoint` donde el sufijo no referencia celdas truncadas; splits arbitrarios (ej. `N//4`) pueden read celdas crazy-filled y no son válidos como puntos de continuación.
 
 ## Tests run
 
