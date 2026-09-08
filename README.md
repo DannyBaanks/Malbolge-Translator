@@ -1,10 +1,16 @@
 # Malbolge Translator
 
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Tests](https://img.shields.io/badge/tests-44%20passed-brightgreen)](#testing)
+
 **Genera programas de Malbolge puro que imprimen texto arbitrario exactamente.**
 
 ![Malbolge Translator Session](malbolge_session.gif)
 
 Esta herramienta usa sintesis incremental de estado-maquina con resets periodicos de ancla para hacer la generacion de texto de Malbolge practica para textos arbitrariamente largos.
+
+---
 
 ## Como funciona
 
@@ -30,6 +36,8 @@ Este traductor descompone el problema:
 
 El resultado es **un stream lineal de opcodes** con **un halt final** (`v`).
 
+---
+
 ## Instalacion
 
 ```bash
@@ -41,10 +49,12 @@ pip install -e .
 O desde fuente:
 
 ```bash
-git clone <this-repo>
+git clone https://github.com/DannyBaanks/Malbolge-Translator.git
 cd Malbolge-Translator
 pip install -e .
 ```
+
+---
 
 ## Inicio Rapido
 
@@ -68,6 +78,8 @@ malbolge-translate input.txt --roundtrip --output-dir out --execute
 malbolge-translate "Hola 世界" --lexicon-add 世 shi --lexicon-add 界 jie --execute
 ```
 
+---
+
 ## Generar Don Quijote (Demo Artifact)
 
 ```bash
@@ -80,6 +92,8 @@ Esto crea:
 - `artifacts/quijote/quijote_full.op` — opcodes raw
 - `artifacts/quijote/manifest.json` — metadata (manifests por capitulo en
   `artifacts/quijote/chapter_NNN/quijote_chNNN_manifest.json`)
+
+---
 
 ## Modos
 
@@ -95,27 +109,30 @@ Ejemplo: `"你好" → "nihao"`, `"ñ" → "ny"`. Util para display pero no byte
 ### Modo B — Roundtrip UTF-8 exacto (reversible, byte-exact)
 
 ```
-TEXTO UTF-8 ORIGINAL → envoltura ASCII reversible (MALRT1) → programa Malbolge puro → ejecucion canonica → payload ASCII → decode → TEXTO UTF-8 ORIGINAL
+TEXTO UTF-8 ORIGINAL → envoltura ASCII reversible (MALRT1) → programa Malbolge puro
+    → ejecucion canonica → payload ASCII → decode → TEXTO UTF-8 ORIGINAL
 ```
 
 Envoltura: `MALRT1:<base64(utf8_bytes)>:<sha256_hex>`. Deterministica, ASCII-safe, versionada, verificada de integridad.
 Propiedades: payload legible = irrelevante, reversible = si, byte exact = si cuando la verificacion pasa.
 
-**Claims (hasta que se demuestre lo contrario):**
+**Claims:**
 
 ```
-MALBOLGE_NATIVE_UNICODE = FALSE
-TRANSLITERATION_REVERSIBLE = FALSE
-ROUNDTRIP_BYTE_EXACT = TRUE solo para runs verificadas que pasan
-FRESH_VM_CONTINUATION = DEMONSTRATED (snapshot serializado + VM fresca, output byte-identico)
-ARBITRARY_SIZE_ROUNDTRIP = DEMONSTRATED (perfil multiprograma, inputs finitos)
-FULL_DON_QUIJOTE_UTF8_ROUNDTRIP = DEMONSTRATED (perfil multiprograma por diccionario)
-SINGLE_PROGRAM_FULL_DON_QUIJOTE = NOT_DEMONSTRATED
-SINGLE_PROGRAM_ARBITRARY_SIZE = NOT_CLAIMED
+MALBOLGE_NATIVE_UNICODE        = FALSE
+TRANSLITERATION_REVERSIBLE     = FALSE
+ROUNDTRIP_BYTE_EXACT           = TRUE solo para runs verificadas que pasan
+FRESH_VM_CONTINUATION          = DEMONSTRATED (snapshot serializado + VM fresca, output byte-identico)
+ARBITRARY_SIZE_ROUNDTRIP       = DEMONSTRATED (perfil multiprograma, inputs finitos)
+FULL_DON_QUIJOTE_UTF8_ROUNDTRIP= DEMONSTRATED (perfil multiprograma por diccionario)
+SINGLE_PROGRAM_FULL_DON_QUIJOTE= NOT_DEMONSTRATED
+SINGLE_PROGRAM_ARBITRARY_SIZE  = NOT_CLAIMED
 ```
 
 El modo roundtrip puede preservar texto UTF-8 valido arbitrario byte por byte, sujeto a limites de recursos de sintesis/ejecucion de Malbolge.
 No reclames "soporta todos los idiomas" — es transporte de bytes, no cobertura linguistica.
+
+---
 
 ### Continuacion en VM fresca
 
@@ -138,6 +155,8 @@ assert evidence.fresh_vm_continuation_pass
 
 Evidencia: `evidence/fresh_vm_continuation/evidence.json` (3/3 PASS).
 
+---
+
 ### Roundtrip multiprograma de tamano arbitrario
 
 MALRT1 solo usa 66 simbolos (`A-Z`, `a-z`, `0-9`, `+`, `/`, `=` y `:`).
@@ -146,21 +165,19 @@ lo ejecuta dos veces en VMs frescas y sella sus opcodes/programa con SHA-256.
 El harness representa cualquier payload finito como referencias a ese
 diccionario y concatena exclusivamente el stdout verificado de esos programas.
 
-```text
-UTF-8 arbitrario -> MALRT1 -> referencias a 66 programas .mal
-                 -> stdout concatenado -> MALRT1 decode -> UTF-8 original
+```
+UTF-8 arbitrario → MALRT1 → referencias a 66 programas .mal
+                   → stdout concatenado → MALRT1 decode → UTF-8 original
 ```
 
 Evidencia ejecutada:
 
 - Diccionario completo: `66/66 PASS`.
-- Control grande: `1,000,000` bytes UTF-8 -> `1,333,408` chars MALRT1 ->
-  bytes y SHA-256 identicos.
-- Don Quijote completo en espanol, Gutenberg #2000: `2,205,980` bytes ->
-  `2,941,380` chars MALRT1 -> bytes y SHA-256 identicos.
+- Control grande: `1,000,000` bytes UTF-8 → `1,333,408` chars MALRT1 → bytes y SHA-256 identicos.
+- Don Quijote completo en espanol, Gutenberg #2000: `2,205,980` bytes → `2,941,380` chars MALRT1 → bytes y SHA-256 identicos.
 - SHA-256 del cuerpo recuperado: `7afbd0f1fa8f2397d280d5fc81ce03e2133ffa34e68251793289861121e03a2c`.
 
-```powershell
+```bash
 py -m evidence.multiprogram.generate_evidence
 py -m evidence.multiprogram.run_full_quijote
 ```
@@ -168,6 +185,10 @@ py -m evidence.multiprogram.run_full_quijote
 Alcance preciso: esto demuestra transporte **multiprograma** de inputs finitos
 de longitud arbitraria. No afirma que un unico proceso de Malbolge Clasico
 contenga memoria ilimitada ni que exista un `.mal` monolitico con todo el libro.
+
+Ver evidencia completa: `evidence/multiprogram/SHA256SUMS.txt`.
+
+---
 
 ### Roundtrip de Dos Partes
 
@@ -181,6 +202,10 @@ escribir artifacts.
 Este es un convenio de transporte bounded, no continuacion cross-VM ni
 evidencia de que el Don Quijote completo pueda generarse o ejecutarse.
 
+---
+
+## Ejemplos de API
+
 ```python
 from malbolge_translator import MalbolgeTranslator, encode_roundtrip, decode_roundtrip
 
@@ -192,11 +217,35 @@ assert decode_roundtrip(payload) == "你好，世界 😭🔥"
 translator = MalbolgeTranslator()
 result = translator.translate_roundtrip("你好，世界 😭🔥")
 verification = translator.verify_roundtrip(result)
-# verification.original_utf8_sha256, verification.recovered_utf8_sha256, verification.bytes_equal, verification.sha_equal, verification.malbolge_execution_status, verification.malbolge_steps, verification.encoded_payload
 assert verification.roundtrip_pass
 ```
 
-### Distincion CLI
+### API completa
+
+```python
+from malbolge_translator import MalbolgeTranslator, Lexicon, encode_roundtrip, decode_roundtrip
+
+# Transliteracion (existente)
+translator = MalbolgeTranslator(anchor_interval=50)
+result = translator.translate("Hello world")
+translator.execute(result)  # verifica output exacto
+
+# Roundtrip (nuevo)
+result = translator.translate_roundtrip("你好，世界 😭🔥")
+verification = translator.verify_roundtrip(result)
+# o
+result, verification = translator.translate_and_verify_roundtrip("Hola, señor", max_steps=5_000_000)
+
+# Lexico custom (solo transliteracion)
+lex = Lexicon()
+lex.add("ñ", "ny")
+lex.add("中", "zhong")
+translator = MalbolgeTranslator(lexicon=lex)
+```
+
+---
+
+## CLI
 
 ```bash
 # Transliteracion legible
@@ -224,42 +273,24 @@ SHA256 match: TRUE
 ROUNDTRIP: PASS
 ```
 
+---
+
 ## Arquitectura
 
 ### Componentes Centrales
 
 | Modulo | Proposito |
 |--------|---------|
-| `translator.py` | Pipeline principal de traduccion: lexicon → split → sintetizar → chain + `translate_roundtrip` / `verify_roundtrip` |
+| `translator.py` | Pipeline principal: lexicon → split → sintetizar → chain + `translate_roundtrip` / `verify_roundtrip` |
 | `roundtrip.py` | Codec UTF-8 reversible: `MALRT1:<base64>:<sha256>` (sin logica Malbolge) |
+| `multiprogram_roundtrip.py` | Diccionario MALRT1 (66 programas puros) y composicion multiprograma |
 | `two_part_roundtrip.py` | Flujo de trabajo bounded de dos programas MALRT1 y verificacion persistida |
+| `fresh_vm_continuation.py` | Serializacion de estado Malbolge y continuacion en VM fresca |
 | `anchor.py` | AnchorManager, WordBank — estados canonicos y cache de continuaciones |
 | `lexicon.py` | Mapeos extensibles por usuario (transliteracion/encoding) |
 | `cli.py` | Interfaz de linea de comandos (`--roundtrip`, `--show-program`) |
-| `render_session.py` | Renderer de GIF de sesion (como session.gif de FLOW) |
 
-### API Publica
-
-```python
-from malbolge_translator import MalbolgeTranslator, Lexicon, encode_roundtrip, decode_roundtrip
-
-# Transliteracion (existente)
-translator = MalbolgeTranslator(anchor_interval=50)
-result = translator.translate("Hello world")
-translator.execute(result)  # verifica output exacto
-
-# Roundtrip (nuevo)
-result = translator.translate_roundtrip("你好，世界 😭🔥")
-verification = translator.verify_roundtrip(result)
-# o
-result, verification = translator.translate_and_verify_roundtrip("Hola, señor", max_steps=5_000_000)
-
-# Lexico custom (solo transliteracion)
-lex = Lexicon()
-lex.add("ñ", "ny")
-lex.add("中", "zhong")
-translator = MalbolgeTranslator(lexicon=lex)
-```
+---
 
 ## Lexico / Encoding
 
@@ -271,14 +302,15 @@ La herramienta incluye un lexico con 300+ mapeos (transliteracion, lossy):
 - Griego/Cirillico/Chino/Japones/Coreano
 - Simbolos, matematicas, flechas, box drawing, emoji
 
-**Importante — Modo A (transliteracion)**: aproximacion lossy. `TRANSLITERATION_REVERSIBLE = FALSE`. Los bytes originales no se preservan.
+**Modo A (transliteracion)**: aproximacion lossy. `TRANSLITERATION_REVERSIBLE = FALSE`. Los bytes originales no se preservan.
 
 **Modo B (roundtrip)** proporciona preservacion exacta via codec reversible (`roundtrip.py`). No se usa transliteracion ahi; los bytes UTF-8 originales sobreviven exactamente.
 
-Agregar mapeos custom (solo modo transliteracion):
 ```bash
 malbolge-translate "text" --lexicon-add 世 shi --lexicon-add 界 jie
 ```
+
+---
 
 ## Garantia de Output Exacto
 
@@ -293,27 +325,44 @@ El interprete canonico es el interprete estandar de Malbolge (memoria 3^10, craz
 - **Modo transliteracion**: `MISMATCH` vs original es esperado (aproximacion); `MATCH` vs transliterado se verifica.
 - **Modo roundtrip**: `verification.bytes_equal` + `sha_equal` + `payload_match` + `HALTED` deben ser todos `TRUE` para `ROUNDTRIP: PASS`. Ver `evidence/roundtrip/` y `docs/ROUNDTRIP_FORMAT.md`.
 
-Artifacts: `*_manifest.json` ahora incluye `mode`, `codec_version`, `original_sha256`, `payload_sha256`, `malbolge_execution_status`, `payload_match`, `bytes_match` etc (schema v2 para roundtrip, v1 para transliteracion — versionado, no sobreescrito).
+Artifacts: `*_manifest.json` incluye `mode`, `codec_version`, `original_sha256`, `payload_sha256`, `malbolge_execution_status`, `payload_match`, `bytes_match` (schema v2 para roundtrip, v1 para transliteracion — versionado, no sobreescrito).
+
 ```
-MALBOLGE_NATIVE_UNICODE = FALSE  # Malbolge no tiene Unicode nativo; el transporte UTF-8 es via ASCII codec sobre Malbolge
-
-UTF8_REVERSIBLE_TRANSPORT_OVER_MALBOLGE = DEMONSTRATED solo cuando los tests end-to-end pasan (ver docs/AUDIT_ROUNDTRIP.md)
+MALBOLGE_NATIVE_UNICODE = FALSE
+UTF8_REVERSIBLE_TRANSPORT_OVER_MALBOLGE = DEMONSTRATED solo cuando los tests end-to-end pasan
 ```
 
-## Requisitos
-
-- Python 3.10+
-- Paquete `malbolge-generator` (provee ProgramGenerator, MalbolgeInterpreter)
+---
 
 ## Testing
 
 ```bash
-# Correr tests basicos
-malbolge-translate "Hola mundo" --execute
-malbolge-translate "The quick brown fox" --execute
-malbolge-translate "def foo(): return 42" --execute
+# Suite completa (44 tests, ~77s con generator)
+py -m pytest tests -q
+
+# Solo roundtrip codec (sin generator, <1s)
+py -m pytest tests/test_roundtrip.py -q
+
+# Multiprograma (requiere malbolge-generator)
+py -m pytest tests/test_multiprogram_roundtrip.py -q
+
+# Continuacion en VM fresca
+py -m pytest tests/test_fresh_vm_continuation.py -q
+
+# Verificar evidencia
+py -m evidence.multiprogram.generate_evidence
+py -m evidence.multiprogram.run_full_quijote
 ```
+
+---
+
+## Requisitos
+
+- Python 3.10+
+- Paquete `malbolge-generator` (provee `ProgramGenerator`, `MalbolgeInterpreter`)
+
+---
 
 ## Licencia
 
-MIT
+MIT — ver [LICENSE](LICENSE).
