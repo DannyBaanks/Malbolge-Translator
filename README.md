@@ -108,8 +108,10 @@ MALBOLGE_NATIVE_UNICODE = FALSE
 TRANSLITERATION_REVERSIBLE = FALSE
 ROUNDTRIP_BYTE_EXACT = TRUE solo para runs verificadas que pasan
 FRESH_VM_CONTINUATION = DEMONSTRATED (snapshot serializado + VM fresca, output byte-identico)
-FULL_DON_QUIJOTE_UTF8_ROUNDTRIP = NOT_DEMONSTRATED (acotado por costo de sintesis)
-ARBITRARY_SIZE_ROUNDTRIP = NOT_DEMONSTRATED (el codec es arbitrario; la sintesis Malbolge es acotada)
+ARBITRARY_SIZE_ROUNDTRIP = DEMONSTRATED (perfil multiprograma, inputs finitos)
+FULL_DON_QUIJOTE_UTF8_ROUNDTRIP = DEMONSTRATED (perfil multiprograma por diccionario)
+SINGLE_PROGRAM_FULL_DON_QUIJOTE = NOT_DEMONSTRATED
+SINGLE_PROGRAM_ARBITRARY_SIZE = NOT_CLAIMED
 ```
 
 El modo roundtrip puede preservar texto UTF-8 valido arbitrario byte por byte, sujeto a limites de recursos de sintesis/ejecucion de Malbolge.
@@ -121,7 +123,7 @@ No reclames "soporta todos los idiomas" — es transporte de bytes, no cobertura
 puede detenerse a mitad de vuelo, serializar su estado de maquina
 (tape + `a`/`c`/`d` + `halted`), y terminar en un `MalbolgeInterpreter()`
 **nuevo** produciendo output byte-identico. La propiedad verificada es
-`prefijo.output + sufijo.output == correda.completa.output`, apoyandose en
+`prefijo.output + sufijo.output == corrida.completa.output`, apoyandose en
 `MalbolgeMachine.copy()` y `execute_from_snapshot()` del toolkit (que
 reverse-normaliza el sufijo en la posicion absoluta correcta).
 
@@ -135,6 +137,37 @@ assert evidence.fresh_vm_continuation_pass
 ```
 
 Evidencia: `evidence/fresh_vm_continuation/evidence.json` (3/3 PASS).
+
+### Roundtrip multiprograma de tamano arbitrario
+
+MALRT1 solo usa 66 simbolos (`A-Z`, `a-z`, `0-9`, `+`, `/`, `=` y `:`).
+`multiprogram_roundtrip.py` sintetiza un programa Malbolge puro por simbolo,
+lo ejecuta dos veces en VMs frescas y sella sus opcodes/programa con SHA-256.
+El harness representa cualquier payload finito como referencias a ese
+diccionario y concatena exclusivamente el stdout verificado de esos programas.
+
+```text
+UTF-8 arbitrario -> MALRT1 -> referencias a 66 programas .mal
+                 -> stdout concatenado -> MALRT1 decode -> UTF-8 original
+```
+
+Evidencia ejecutada:
+
+- Diccionario completo: `66/66 PASS`.
+- Control grande: `1,000,000` bytes UTF-8 -> `1,333,408` chars MALRT1 ->
+  bytes y SHA-256 identicos.
+- Don Quijote completo en espanol, Gutenberg #2000: `2,205,980` bytes ->
+  `2,941,380` chars MALRT1 -> bytes y SHA-256 identicos.
+- SHA-256 del cuerpo recuperado: `7afbd0f1fa8f2397d280d5fc81ce03e2133ffa34e68251793289861121e03a2c`.
+
+```powershell
+py -m evidence.multiprogram.generate_evidence
+py -m evidence.multiprogram.run_full_quijote
+```
+
+Alcance preciso: esto demuestra transporte **multiprograma** de inputs finitos
+de longitud arbitraria. No afirma que un unico proceso de Malbolge Clasico
+contenga memoria ilimitada ni que exista un `.mal` monolitico con todo el libro.
 
 ### Roundtrip de Dos Partes
 

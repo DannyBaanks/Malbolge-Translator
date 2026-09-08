@@ -1,4 +1,4 @@
-# AUDIT — UTF-8 Roundtrip over Malbolge (2026-09-02)
+# AUDIT — UTF-8 Roundtrip over Malbolge (2026-09-02; actualizado 2026-09-08)
 
 **Repo:** Malbolge-Translator (verified with `git rev-parse --show-toplevel` in the author's local checkout)
 **Branch:** master (pushed b714728, now updated)
@@ -40,13 +40,18 @@ MALBOLGE_END_TO_END_VERIFIED = PASS (8/8 small payloads, HALTED, sha_match, byte
 TESTS_PASS = TRUE (29/29, 78s with generator)
 ```
 
-## Preserved negative claims (not upgraded)
+## Limites preservados (no colapsar perfiles)
 
 ```
-FULL_DON_QUIJOTE_UTF8_ROUNDTRIP = NOT_DEMONSTRATED
-ARBITRARY_SIZE_ROUNDTRIP = NOT_DEMONSTRATED
+SINGLE_PROGRAM_FULL_DON_QUIJOTE = NOT_DEMONSTRATED
+SINGLE_PROGRAM_ARBITRARY_SIZE = NOT_CLAIMED
 MALBOLGE_NATIVE_UNICODE = FALSE
 ```
+
+Los claims generales de Quijote y tamano arbitrario se promovieron solo bajo
+el perfil `malrt1-multiprogram-dictionary/1`: un harness concatena stdout de
+programas Malbolge puros, independientes y previamente ejecutados. No se
+reinterpreta eso como un unico proceso Classic Malbolge.
 
 ## Preserved positive claim — FRESH_VM_CONTINUATION (2026-09-07)
 
@@ -79,6 +84,9 @@ basura); el midpoint usado aqui conserva las celdas de datos intactas.
 - **Negative:** corrupto, truncado, versión desconocida, base64 inválido, sha erróneo, vacío — rechazados (`tests/test_roundtrip.py:44`) con `CORRUPTED`/`INVALID`, no `?`.
 - **Transliteración regression:** `transliterate("你好")== "nihao"` preservado; roundtrip nunca llama transliteración.
 - **Matrix real (8 casos, con generator, 78s):** `evidence/roundtrip/evidence.json:9` — todos `codec=PASS`, `synthesis=PASS`, `end_to_end=PASS`, `HALTED`, `sha_match`.
+- **Diccionario multiprograma:** `evidence/multiprogram/symbol_dictionary.json` — 66/66 simbolos MALRT1 sintetizados como programas Malbolge puros; cada uno ejecutado dos veces durante build y re-ejecutado antes del Quijote.
+- **Tamano arbitrario:** `evidence/multiprogram/arbitrary_size_evidence.json` — 1,000,000 bytes UTF-8, payload 1,333,408 chars, bytes/SHA identicos.
+- **Quijote completo:** `evidence/multiprogram/full_quijote_evidence.json` — Gutenberg #2000 en espanol, cuerpo 2,205,980 bytes, payload 2,941,380 chars, bytes/SHA identicos.
 
 | case | utf8 bytes | payload chars | malbolge chars | steps | payload_match | bytes_equal | sha_equal | end_to_end |
 |---|---|---|---|---|---|---|---|---|
@@ -119,8 +127,10 @@ CODEC_ROUNDTRIP = PASS (8/8)
 MALBOLGE_SYNTHESIS = PASS (8/8 small, HALTED)
 END_TO_END_ROUNDTRIP = PASS (8/8, sha256 recovered == original, bytes_equal)
 FRESH_VM_CONTINUATION = DEMONSTRATED (3/3, byte-identico, 2026-09-07)
-FULL_DON_QUIJOTE_UTF8_ROUNDTRIP = NOT_DEMONSTRATED (no intentado, por diseño)
-ARBITRARY_SIZE_ROUNDTRIP = NOT_DEMONSTRATED (no claim)
+ARBITRARY_SIZE_ROUNDTRIP = DEMONSTRATED (multiprograma, inputs finitos)
+FULL_DON_QUIJOTE_UTF8_ROUNDTRIP = DEMONSTRATED (multiprograma, Gutenberg #2000)
+SINGLE_PROGRAM_FULL_DON_QUIJOTE = NOT_DEMONSTRATED
+SINGLE_PROGRAM_ARBITRARY_SIZE = NOT_CLAIMED
 ```
 
 **EXACT_UTF8_ROUNDTRIP_OVER_PURE_MALBOLGE = DEMONSTRATED** para payloads pequeños ASCII-safe bajo presupuesto (`max_search_depth=5`, `max_steps=5_000_000`).
@@ -132,6 +142,8 @@ MALBOLGE_NATIVE_UNICODE = FALSE
 UTF8_REVERSIBLE_TRANSPORT_OVER_MALBOLGE = DEMONSTRATED (small payloads, E2E PASS, HALTED, byte-equal)
 TRANSLITERATION_REVERSIBLE = FALSE
 ROUNDTRIP_BYTE_EXACT = TRUE for passing verified runs
+ARBITRARY_SIZE_ROUNDTRIP = DEMONSTRATED under malrt1-multiprogram-dictionary/1
+FULL_DON_QUIJOTE_UTF8_ROUNDTRIP = DEMONSTRATED under malrt1-multiprogram-dictionary/1
 ```
 
 > Malbolge-Translator implements a versioned reversible UTF-8 transport mode. UTF-8 bytes are encoded into an ASCII-safe envelope, synthesized into executable Malbolge, recovered through execution, decoded, and verified byte-for-byte.
@@ -146,11 +158,12 @@ Python Translator creates MALRT1 → Malbolge → Webolge JS executes/decodes �
 
 ## Remaining limitations (honestas)
 
-- Full Quijote y `ARBITRARY_SIZE` siguen `NOT_DEMONSTRATED` — no se intentó `Don Quijote` como primer test, a propósito, para no hacer claim de horas.
+- El perfil multiprograma necesita host scheduling y concatenacion literal de stdout. Un unico programa Classic Malbolge para todo Don Quijote sigue `NOT_DEMONSTRATED`.
+- "Arbitrario" significa cualquier input **finito** sujeto a almacenamiento/tiempo del host; no memoria infinita ni Turing-completeness de Classic Malbolge.
 - Payloads grandes (> ~200 chars base64) aumentan `malbolge_chars` y `steps`; presupuesto `max_search_depth=5` puede necesitar `TIMEOUT` → clasificar, no mentir.
 - Webolge aún Latin-1 limited; el formato `MALRT1` ya está listo para port JS (`TextEncoder → Base64 → SHA-256`, mismo SHA), pero `Webolge supports roundtrip` sigue `FALSE` hasta implementación.
 - `malbolge-generator` ahora instalado vendored; si se desinstala, el fallback vuelve a `NOT_DEMONSTRATED` explícito (no `?`).
-- `FRESH_VM_CONTINUATION` está demostrado solo en splits `midpoint` donde el sufijo no referencia celdas truncadas; splits arbitrarios (ej. `N//4`) pueden read celdas crazy-filled y no son válidos como puntos de continuación.
+- `FRESH_VM_CONTINUATION` está demostrado solo en splits `midpoint` donde el sufijo no referencia celdas truncadas; splits arbitrarios (ej. `N//4`) pueden leer celdas crazy-filled y no son válidos como puntos de continuación.
 
 ## Tests run
 
@@ -165,11 +178,21 @@ py -m pytest tests/test_roundtrip.py -v
 
 # evidencia
 py -m evidence.roundtrip.generate_evidence  # 8/8 PASS, prog 2260-3715 chars, steps 2162-3617
+
+# suite completa actual
+py -m pytest tests -q
+44 passed in 77.55s
+
+# evidencia multiprograma actual
+py -m evidence.multiprogram.generate_evidence
+# dictionary 66/66 PASS; 1,000,000 bytes PASS
+py -m evidence.multiprogram.run_full_quijote
+# 2,205,980 bytes; dictionary re-execution True; PASS
 ```
 
 No existing transliteration tests broken (there were none before; regression covered by `test_transliteration_regression`).
 
-## Files changed (not pushed)
+## Archivos de implementación y evidencia
 
 - `malbolge_translator/roundtrip.py` (new)
 - `malbolge_translator/translator.py` (added `RoundtripResult`, `RoundtripVerification`, `translate_roundtrip`, `verify_roundtrip`)
@@ -179,4 +202,7 @@ No existing transliteration tests broken (there were none before; regression cov
 - `docs/AUDIT_ROUNDTRIP.md` (this file)
 - `tests/test_roundtrip.py` (new)
 - `evidence/roundtrip/evidence.json`, `evidence/roundtrip/summary.md`, `evidence/roundtrip/generate_evidence.py`
+- `malbolge_translator/multiprogram_roundtrip.py` (diccionario de programas puros y composición multiprograma)
+- `tests/test_multiprogram_roundtrip.py` (controles de 1 MB, síntesis real y modo codec-only)
+- `evidence/multiprogram/` (diccionario, scripts, resultados y `SHA256SUMS.txt`)
 - `README.md` (modes distinction, claims)

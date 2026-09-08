@@ -12,6 +12,16 @@ from .fresh_vm_continuation import (
     run_fresh_vm_continuation,
     split_opcodes,
 )
+from .multiprogram_roundtrip import (
+    MALRT1_ALPHABET,
+    MultiprogramRoundtripEvidence,
+    SymbolProgram,
+    build_symbol_dictionary,
+    load_symbol_dictionary,
+    save_symbol_dictionary,
+    transport_text,
+    verify_symbol_dictionary,
+)
 try:
     from .anchor import AnchorManager, AnchorState, WordBank, BankEntry
 except Exception:  # malbolge-generator not installed
@@ -56,4 +66,12 @@ __all__ = [
     "FreshVMContinuationEvidence",
     "run_fresh_vm_continuation",
     "split_opcodes",
+    "MALRT1_ALPHABET",
+    "MultiprogramRoundtripEvidence",
+    "SymbolProgram",
+    "build_symbol_dictionary",
+    "load_symbol_dictionary",
+    "save_symbol_dictionary",
+    "transport_text",
+    "verify_symbol_dictionary",
 ]
