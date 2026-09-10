@@ -1,6 +1,6 @@
 # Don Quijote in Malbolge — Artifact
 
-This directory contains the first 17 chapters of *Don Quijote* (Ormsby translation, Project Gutenberg) translated into pure Malbolge programs using the **anchor harness** synthesis method.
+This directory contains the first 17 chapters of *Don Quijote* (Ormsby translation, Project Gutenberg) translated into pure Malbolge programs.
 
 ## Source
 
@@ -14,10 +14,10 @@ This directory contains the first 17 chapters of *Don Quijote* (Ormsby translati
 
 Each chapter is a **separate, self-contained Malbolge program** (`.mal` file) that:
 
-1. Bootstraps to the canonical anchor state (`i` + `o` × 99)
-2. Synthesizes word-by-word continuations from that anchor
+1. Bootstraps (`i` + `o` × 99) to a clean machine state
+2. Encodes the chapter text word-by-word into opcodes
 3. Halts with a single `v` opcode
-4. Produces **exact** output matching the source text
+5. Produces **exact** output matching the source text
 
 ```bash
 # Verify any chapter
@@ -40,13 +40,13 @@ python -m malbolge_translator.cli artifacts/quijote/chapter_001/quijote_ch001_fu
 | 10 | CHAPTER X | 16 | 2,576 | 2,478 | ✓ |
 | 11 | CHAPTER XI | 10 | 1,719 | 1,621 | ✓ |
 | 12 | CHAPTER XII | 27 | 4,303 | 4,205 | ✓ |
-| 13 | CHAPTER XIV | 19 | — | — | — |
-| 14 | CHAPTER XV | — | — | — | — |
-| 15 | CHAPTER XVI | — | — | — | — |
-| 16 | CHAPTER XVII | — | — | — | — |
-| 17 | CHAPTER XVIII | — | — | — | — |
+| 13 | CHAPTER XIV | 37 | 3,301 | 3,203 | ✓ |
+| 14 | CHAPTER XV | 83 | 6,094 | 5,996 | ✓ |
+| 15 | CHAPTER XVII | 67 | 4,897 | 4,799 | ✓ |
+| 16 | CHAPTER XVIII | 41 | 3,356 | 3,258 | ✓ |
+| 17 | CHAPTER XIX | 55 | 4,500 | 4,402 | ✓ |
 
-*Note: Chapters 13-17 generated but execution verification pending.*
+*All 17 chapters executed and verified in single run.*
 
 ## Hashes
 

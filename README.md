@@ -16,25 +16,22 @@ Esta herramienta usa sintesis incremental de estado-maquina con resets periodico
 
 Malbolge es un lenguaje auto-modificante y counter-machine donde cada instruccion depende del estado completo del maquina. Los enfoques tradicionales intentan generar el programa completo de una vez, lo cual es inviable para textos largos.
 
-Este traductor descompone el problema:
+Este traductor usa dos estrategias complementarias:
 
+**Modo Multiprograma (publicado, verificado):**
 ```
-[Bootstrap: i + o*99] → Estado Ancla (memoria limpia, sin output)
-        ↓
-[Continuacion Palabra 1] → [Continuacion Palabra 2] → ... → [Continuacion Palabra N + halt]
-        ↓                    ↓
-   (estado del maquina    (estado del maquina
-    avanza)                avanza)
-        ↓
-[Cada N palabras: Bridge → Reset a Ancla → Continuar]
+UTF-8 → MALRT1 (66 símbolos) → 66 programas .mal independientes
+       → stdout concatenado (host) → MALRT1 decode → UTF-8 original
 ```
+Cada símbolo MALRT1 es un programa Malbolge puro ejecutado independientemente y verificado 2×. El host concatena salidas. Ver `evidence/multiprogram/`.
 
-- **Ancla**: Un estado canonico del maquina alcanzado por una secuencia de bootstrap fija. Identificado por un hash de (A, C, D, tape[:100]).
-- **Continuacion**: Opcodes que, cuando se ejecutan *desde un estado especifico del maquina*, producen la siguiente palabra.
-- **Banco de Palabras**: Cache de (anchor_hash, word) → continuacion. Solo valido cuando el estado del maquina coincide con el ancla.
-- **Cadena Lineal**: La continuacion de cada palabra se ejecuta desde el estado final de la palabra anterior.
+**Modo Capítulos (artifact demo):**
+```
+Bootstrap (i + o*99) → Palabra 1 → Palabra 2 → ... → Palabra N + halt (v)
+```
+Cada capítulo de Don Quijote es un **único programa .mal** que se ejecuta de principio a fin en el intérprete clásico, sin intervención del host. Ver `artifacts/quijote/chapter_NNN/`.
 
-El resultado es **un stream lineal de opcodes** con **un halt final** (`v`).
+No hay "Bridge → Reset a Ancla" en tiempo de ejecución: esa maquinaria (`anchor.py:107-125`, `execute_from_snapshot`) es código muerto/roto y no se usa en la generación publicada.
 
 ---
 
@@ -88,10 +85,9 @@ malbolge-quijote --output-dir artifacts/quijote --execute
 ```
 
 Esto crea:
-- `artifacts/quijote/quijote_full.mal` — programa de Malbolge puro (~50 MB)
-- `artifacts/quijote/quijote_full.op` — opcodes raw
-- `artifacts/quijote/manifest.json` — metadata (manifests por capitulo en
-  `artifacts/quijote/chapter_NNN/quijote_chNNN_manifest.json`)
+- 17 capítulos independientes en `artifacts/quijote/chapter_NNN/`
+- Cada capítulo: `quijote_chNNN_full.mal`, `.op`, `manifest.json`, `word_XXXX.op`
+- Manifest global: `artifacts/quijote/manifest.json`
 
 ---
 
