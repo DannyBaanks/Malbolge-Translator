@@ -1,0 +1,61 @@
+{
+  "classic_interpreter": "C:\\Development\\ISyCo\\workspace\\assembly\\malbolge\\malbolge_interpreter.py",
+  "criterion": "RLE_PASS iff Classic exact output_bytes > source_chars",
+  "experiment": "RLE_DECOMPRESSOR_EPOCH_V0",
+  "generated_at_utc": "2026-09-09T21:53:02.434940+00:00",
+  "rows": [
+    {
+      "classic_exact": true,
+      "classic_status": "HALTED",
+      "classic_steps": 157,
+      "output_bytes": 16,
+      "output_over_source": 0.06274509803921569,
+      "source_chars": 255,
+      "target_bytes": 16,
+      "toolkit_evaluations": 7313
+    },
+    {
+      "classic_exact": true,
+      "classic_status": "HALTED",
+      "classic_steps": 253,
+      "output_bytes": 64,
+      "output_over_source": 0.18233618233618235,
+      "source_chars": 351,
+      "target_bytes": 64,
+      "toolkit_evaluations": 7361
+    },
+    {
+      "classic_exact": true,
+      "classic_status": "HALTED",
+      "classic_steps": 637,
+      "output_bytes": 256,
+      "output_over_source": 0.34829931972789113,
+      "source_chars": 735,
+      "target_bytes": 256,
+      "toolkit_evaluations": 7553
+    },
+    {
+      "classic_exact": true,
+      "classic_status": "HALTED",
+      "classic_steps": 2173,
+      "output_bytes": 1024,
+      "output_over_source": 0.45090268604139144,
+      "source_chars": 2271,
+      "target_bytes": 1024,
+      "toolkit_evaluations": 8321
+    },
+    {
+      "classic_exact": true,
+      "classic_status": "HALTED",
+      "classic_steps": 8317,
+      "output_bytes": 4096,
+      "output_over_source": 0.4867498514557338,
+      "source_chars": 8415,
+      "target_bytes": 4096,
+      "toolkit_evaluations": 11393
+    }
+  ],
+  "scope": "Repeated A is a control for output expansion only. A PASS does not demonstrate a general decompressor or Quijote synthesis.",
+  "seed": 42,
+  "verdict": "NOT_DEMONSTRATED"
+}

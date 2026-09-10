@@ -11,6 +11,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -54,6 +55,11 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-steps", type=int, default=5_000_000, help="Max execution steps")
     
     parser.add_argument("--quijote", action="store_true", help="Generate Don Quijote (downloads if needed)")
+    parser.add_argument(
+        "--single-program-preflight",
+        action="store_true",
+        help="Measure prerequisites for one self-contained Classic Malbolge program; does not synthesize.",
+    )
     
     parser.add_argument("--lexicon-add", nargs=2, metavar=("CHAR", "REPL"), action="append", help="Add custom lexicon mapping")
     parser.add_argument("--lexicon-file", type=Path, help="Load custom lexicon from JSON file")
@@ -93,6 +99,13 @@ def main(argv: list[str] | None = None) -> int:
     
     if not text:
         parser.error("No input text provided")
+
+    if args.single_program_preflight:
+        from .single_program import preflight_single_program
+
+        result = preflight_single_program(text)
+        print(json.dumps(result.to_dict(), indent=2, sort_keys=True))
+        return 0
     
     # --------------------------------------------------
     # ROUNDTRIP MODE — byte-exact UTF-8 (single or two-part)

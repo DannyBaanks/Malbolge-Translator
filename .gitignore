@@ -51,6 +51,12 @@ htmlcov/
 *.mal
 artifacts/quijote/*.mal
 artifacts/quijote/*.op
+# ...except hashed RLE evidence (small, referenced by GUIA/README with SHA-256)
+!experiments/rle_decompressor_v0/evidence/*.mal
+
+# Zig build outputs
+zig/zig-out/
+zig/.zig-cache/
 
 # Local config
 .env
