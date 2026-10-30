@@ -1,0 +1,10 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "dataflow_planner19.py": "5316c3339bd1a6d2a7d4f2797d0bc1a3743250f3e54f807571f291091b3e7df3",
+    "generated_H_dataflow19.mal": "8c554287d3de40cb6146a0ab7f59ef262f9946806de185f50b3b2723a1ab3115",
+    "README.md": "1f6a1efdffd543d9204700676c0518f03448a9e021bee1c31d92b5b4348f0599",
+    "REPORT.md": "5c3ac2b1fbe1e3e27e19eaf12702869637062298f1d27b47c936d0b8fc2c672d",
+    "raw.txt": "5a93200a134a7e554b5a6651bdfc08bdac978d36643209368f945042e955771a"
+  }
+}

@@ -1,0 +1,17 @@
+COMMAND: py program_generator19.py A --seed 0 --output generated_A19.mal
+EXIT: 0
+target='A'
+opcodes=190
+machine_output='A'
+evaluations=5192
+output=generated_A19.mal
+
+REPEAT COMMAND: py program_generator19.py A --seed 0 --output generated_A19_repeat.mal
+EXIT: 0
+target='A'
+opcodes=190
+machine_output='A'
+evaluations=5192
+output=generated_A19_repeat.mal
+byte_equal True
+repeat_sha256 b5870ca9bea1baae67194f76155845d22ede9f98c9d81c8edb9869bc857bed89

@@ -1,0 +1,12 @@
+{
+    "algorithm":  "sha256",
+    "files":  {
+                  "direct_encoder19.py":  "ba28c238e8c110ffc141e8a3be4443cd3282d89e2334bd0a6ac45f0ee32c14b3",
+                  "in_out_end19.mal":  "7e06b0c66f3253e37e419ad8b59365950c5d484db497487c95a4bad6cc1bb2a7",
+                  "first_divergence.py":  "ab32f3cf09dd088e4cc7f039b3b5eb5feba5dc27bfe308f224c4d8ac2cfd57b1",
+                  "test_direct_encoder19.py":  "c7474df6e2c1187dbc82bdf6d60b533d00053cbefe2e2e7e00c696a81a1ecdea",
+                  "REPORT.md":  "47a6a48094800555a887e39b8a6511dbba294d20cd4e8eab5cfe336259aeb1e7",
+                  "first_divergence_raw.txt":  "eec73dabab72705f4905ac5d131479f13d9e0f3a3b0800405c28ff2a9996bae3",
+                  "probe.py":  "c89813650ce0829b1e3fd8957559a575b76ad4469eb7a5d640a774a6c8e3ea2b"
+              }
+}

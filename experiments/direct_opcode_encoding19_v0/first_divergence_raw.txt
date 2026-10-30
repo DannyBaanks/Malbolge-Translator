@@ -1,0 +1,153 @@
+﻿[
+  {
+    "step": 0,
+    "pre": {
+      "c": 0,
+      "d": 0,
+      "a": 0,
+      "mem_c": 98,
+      "mem_d": 98
+    },
+    "desired_symbol": "i",
+    "desired_opcode": 4,
+    "source_character": "b",
+    "source_ascii": 98,
+    "decoded_classic": 4,
+    "decoded_19": 4,
+    "instruction_classic": 4,
+    "instruction_19": 4,
+    "output_classic_hex": "",
+    "output_19_hex": "",
+    "post": {
+      "classic": {
+        "a": 0,
+        "c": 99,
+        "d": 1,
+        "mem_d": 98
+      },
+      "m19": {
+        "a": 0,
+        "c": 99,
+        "d": 1,
+        "mem_d": 98
+      },
+      "encrypted_address_classic": 98,
+      "encrypted_address_19": 98
+    }
+  },
+  {
+    "step": 1,
+    "pre": {
+      "c": 99,
+      "d": 1,
+      "a": 0,
+      "mem_c": 63,
+      "mem_d": 67
+    },
+    "desired_symbol": "o",
+    "desired_opcode": 68,
+    "source_character": "?",
+    "source_ascii": 63,
+    "decoded_classic": 68,
+    "decoded_19": 68,
+    "instruction_classic": 68,
+    "instruction_19": 68,
+    "output_classic_hex": "",
+    "output_19_hex": "",
+    "post": {
+      "classic": {
+        "a": 0,
+        "c": 100,
+        "d": 2,
+        "mem_d": 67
+      },
+      "m19": {
+        "a": 0,
+        "c": 100,
+        "d": 2,
+        "mem_d": 67
+      },
+      "encrypted_address_classic": 99,
+      "encrypted_address_19": 99
+    }
+  },
+  {
+    "step": 2,
+    "pre": {
+      "c": 100,
+      "d": 2,
+      "a": 0,
+      "mem_c": 62,
+      "mem_d": 66
+    },
+    "desired_symbol": "o",
+    "desired_opcode": 68,
+    "source_character": ">",
+    "source_ascii": 62,
+    "decoded_classic": 68,
+    "decoded_19": 68,
+    "instruction_classic": 68,
+    "instruction_19": 68,
+    "output_classic_hex": "",
+    "output_19_hex": "",
+    "post": {
+      "classic": {
+        "a": 0,
+        "c": 101,
+        "d": 3,
+        "mem_d": 66
+      },
+      "m19": {
+        "a": 0,
+        "c": 101,
+        "d": 3,
+        "mem_d": 66
+      },
+      "encrypted_address_classic": 100,
+      "encrypted_address_19": 100
+    }
+  },
+  {
+    "step": 3,
+    "pre": {
+      "c": 101,
+      "d": 3,
+      "a": 0,
+      "mem_c": 55,
+      "mem_d": 65
+    },
+    "desired_symbol": "p",
+    "desired_opcode": 62,
+    "source_character": "7",
+    "source_ascii": 55,
+    "decoded_classic": 62,
+    "decoded_19": 62,
+    "instruction_classic": 62,
+    "instruction_19": 62,
+    "output_classic_hex": "",
+    "output_19_hex": "",
+    "crazy_effect": {
+      "classic": 29552,
+      "m19": 581130761
+    },
+    "post": {
+      "classic": {
+        "a": 29552,
+        "c": 102,
+        "d": 4,
+        "mem_d": 29552
+      },
+      "m19": {
+        "a": 581130761,
+        "c": 102,
+        "d": 4,
+        "mem_d": 581130761
+      },
+      "encrypted_address_classic": 101,
+      "encrypted_address_19": 101
+    }
+  }
+]
+FIRST_DIVERGENCE_STEP 3
+OPCODE_STILL_MATCHES True
+CAUSE crazy_vs_mcrz

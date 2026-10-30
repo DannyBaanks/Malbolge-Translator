@@ -1,0 +1,10 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "generated_ABC19.mal": "9d3827d1a558ad3af0e57bda82b66d798933fe4e8ee784ff642b6a0ce200d79f",
+    "README.md": "a774ca56422877f7c367eb31d275225625c303bbdd28eb8c75f9f4f665ea44eb",
+    "REPORT.md": "7beda24c4af78bb01b13594ebd92ae201ec399d99f54b1bb450f27be19705088",
+    "generator_raw.txt": "fff7ca1355b9795e41bd09f2e35fa81c19615928f4f3d8602b84f7d551d9a3c7",
+    "oracle_raw.txt": "bab68b63f625e0e93bcf4c4ff2260eb4e6ab1096871fb4cc304c9196e6605168"
+  }
+}

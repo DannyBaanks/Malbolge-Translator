@@ -69,3 +69,7 @@ zig/.zig-cache/
 gcm-diagnose.log
 build/
 *.log
+
+# Binarios compilados (no se versionan; FREEZE-REG FD-02 / plan push-repos-freeze M3)
+*.exe
+*.pdb

@@ -1,0 +1,31 @@
+CONTROL 4 WORKERS
+COMMAND: py dataflow_planner19.py H --output generated_H_dataflow19.mal --workers 4 --beam 5000 --max-depth 160
+{"index": 0, "char": "H", "byte": 72, "depth": 8, "frontier": 2187, "cells": 109}
+target='H'
+workers=4
+cells=110
+expanded=9840
+EXIT=0
+ELAPSED_MS=606
+
+ORACLE CONTROL
+exit 0
+stdout_hex 48
+bolge19: imagen=110 celdas zona=[65426,130852) pat=[581130694,66,581130694...]
+bolge19: HALT steps=11 c=109 d=11 a=451990600 elapsed=0s
+
+CONTROL 1 WORKER
+workers=1
+cells=110
+expanded=9840
+EXIT=0
+ELAPSED_MS=383
+byte_equal True
+sha256 8c554287d3de40cb6146a0ab7f59ef262f9946806de185f50b3b2723a1ab3115
+
+TARGET HOLA MUNDO
+COMMAND: py dataflow_planner19.py 'Hola mundo' --output generated_hola_dataflow19.mal --workers 4 --beam 20000 --max-depth 256
+{"index": 0, "char": "H", "byte": 72, "depth": 8, "frontier": 2187, "cells": 109}
+RuntimeError: no path for byte 1=111 at depth 256
+EXIT=1
+ELAPSED_MS=164168

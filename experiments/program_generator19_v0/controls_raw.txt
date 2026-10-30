@@ -1,0 +1,15 @@
+CLASSIC BASELINE
+source_cells 232
+source_sha256 f1ade8c1ba89ad1c26903c5d14d887b44c177b87a5d3d9fe34538d3313232794
+status HALTED
+steps 134
+stdout_hex 41
+stdout_sha256 559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd
+
+NEGATIVE CONTROL: SAME CLASSIC BYTES UNDER BOLGE19
+exit 0
+source_cells 232
+source_sha256 f1ade8c1ba89ad1c26903c5d14d887b44c177b87a5d3d9fe34538d3313232794
+stdout_hex da
+stdout_sha256 5d5c7d20a3aab9c158f23304df4bec3bd9d56c517db3caeaa519d4d05624d7a0
+bolge19: HALT steps=133 c=231 d=133 a=581130714 elapsed=0s

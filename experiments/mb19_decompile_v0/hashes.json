@@ -1,0 +1,13 @@
+{
+    "algorithm":  "sha256",
+    "files":  {
+                  "README.md":  "5412d49d23775a03b3b1fc949d453ce7bdd647c8e10933c5063e20e78c5ec127",
+                  "decompile19.exe":  "9bde8505d0e976a5fcb7a93f6aed1de362fff04ebf41a6e6a58ee428daf9b98d",
+                  "raw_core_local.txt":  "87ef1b039606c5b8f8984bd20f2047a4f22b212e4c52accfa1555397d2fbdcad",
+                  "raw_lisp.txt":  "73616c91993c3b9dca92be4951ade8256c34f67288480bb8d16ca69ed2879d11",
+                  "raw_init.txt":  "e294cdb28fcb51676008fd4c816f1d28e08c1c910a792924cb22402a398aa90f",
+                  "decompile19.zig":  "278c568cbd969394ff5242aa2527fb568f0a9c9d43e21215c106b8e72a6d14b0",
+                  "raw_a19.txt":  "da06c0c966bce5727b851b48280da574561d1ce309d5921e36b8787325d6f349",
+                  "direct_encoder19.py":  "ba28c238e8c110ffc141e8a3be4443cd3282d89e2334bd0a6ac45f0ee32c14b3"
+              }
+}

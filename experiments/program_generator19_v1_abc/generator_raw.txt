@@ -1,0 +1,11 @@
+COMMAND: py ..\program_generator19_v0\program_generator19.py ABC --seed 0 --output generated_ABC19.mal
+EXIT: 0
+ELAPSED_MS: 338
+target='ABC'
+opcodes=272
+machine_output='ABC'
+evaluations=9738
+output=generated_ABC19.mal
+
+REPEAT: byte_equal True
+repeat_sha256 9d3827d1a558ad3af0e57bda82b66d798933fe4e8ee784ff642b6a0ce200d79f

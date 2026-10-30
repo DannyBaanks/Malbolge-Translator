@@ -1,0 +1,12 @@
+{
+  "algorithm": "sha256",
+  "files": {
+    "program_generator19.py": "a719665505ea11e0cf06c632b63a021eed8e7fc2f1aa01c7e8b4154901a3ee73",
+    "generated_A19.mal": "b5870ca9bea1baae67194f76155845d22ede9f98c9d81c8edb9869bc857bed89",
+    "README.md": "baa443e22cfcb3fe2961fa40d5f946aee448eb882a3858e5f323772534c7b5ab",
+    "REPORT.md": "4801bf93ea03ccc5f99c97bb2c1ca52e683462ab36fb10669029ee9be38391db",
+    "generator_raw.txt": "b13797120bc56c41da6cb6560155165f7a2e1fcc77c883cce36053a3b46d3b9f",
+    "oracle_raw.txt": "da0181ca49df26714d7394c50ffa66af91f2b04872466b3d3606a79bf5ba37ef",
+    "controls_raw.txt": "2dbce90a9dc3cabd895037c0d46d2a990dcd3f98bd0bf16de4ea89b637cddac0"
+  }
+}

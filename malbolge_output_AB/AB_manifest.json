@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "mode": "transliteration",
+  "original": "AB",
+  "processed": "AB",
+  "words": 1,
+  "anchors": [
+    "default"
+  ],
+  "opcodes": 212,
+  "stats": {
+    "words": 1,
+    "evaluations": 6268,
+    "duration_s": 0.1173367,
+    "anchors_used": 1
+  }
+}

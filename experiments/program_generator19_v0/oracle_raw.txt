@@ -1,0 +1,9 @@
+COMMAND: bolge19.exe generated_A19.mal 100000
+EXIT: 0
+source_bytes 190
+source_sha256 b5870ca9bea1baae67194f76155845d22ede9f98c9d81c8edb9869bc857bed89
+stdout_hex 41
+stdout_sha256 559aead08264d5795d3909718cdd05abd49572e84fe55590eef31a88a08fdffd
+stderr_raw
+bolge19: imagen=190 celdas zona=[65346,130692) pat=[581130702,80,581130711...]
+bolge19: HALT steps=91 c=189 d=91 a=451990593 elapsed=0s
