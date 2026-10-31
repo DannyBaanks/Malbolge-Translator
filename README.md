@@ -482,6 +482,21 @@ py -m evidence.multiprogram.run_full_quijote
 
 ---
 
+## Archivos añadidos al repositorio (2026-10-31)
+
+El commit `d8865dd` versiona 79 archivos que estaban sin control de versiones:
+
+- `experiments/direct_opcode_encoding19_v0/` — codificación directa de opcodes.
+- `experiments/mb19_decompile_v0/` — descompilador 19 (`decompile19.zig`, salidas
+  crudas, `hashes.json`, `README.md`).
+- `experiments/program_generator19_v0/`, `_v1_abc/`, `_v2_hola/`, `_v3_dataflow/` —
+  versiones del generador de programas 19 con sus `REPORT.md`, `README.md` y `hashes.json`.
+- `malbolge_output*/` (8 directorios) — salidas `.op` y manifiestos de cada corrida.
+- `malbolge_translator/hybrid_snapshot.py` y `zig/` (extractor, pruebas `t_turing*.zig`
+  y datos de prueba).
+- `.gitignore`: ahora ignora `*.exe` y `*.pdb` (los binarios compilados dejan de versionarse).
+
+
 ## Licencia
 
 MIT — ver [LICENSE](LICENSE).
