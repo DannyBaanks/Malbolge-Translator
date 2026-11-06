@@ -43,11 +43,16 @@ No hay "Bridge → Reset a Ancla" en tiempo de ejecución: esa maquinaria (`anch
    - Fallback automático o manual (`--engine auto|conveyor|beam`).
 2. **Puente con el Oráculo Canónico Estricto `mb_ref` (BolgeForge):**
    - Validación estricta y capacidad de streaming para libros completos a través del Streaming Cat (`artifacts/cat_compact.mal`, 7,690 celdas, `--stream-cat`).
-3. **Preflight Termodinámico y de Límites (`--single-program-preflight`):**
-   - Análisis formal de viabilidad:
-     * $\le 1,000$ chars $\to$ Autobolge Conveyor.
-     * $\le 59,049$ celdas $\to$ Búsqueda estocástica o fragmentada.
-     * $> 117\text{ KB}$ de entropía (ej. El Quijote de 2.2 MB) $\to$ Barrera de Shannon demostrada; despacha a BolgeForge Streaming Cat o MALRT1 Multiprograma.
+3. **Preflight Epistemológico y Análisis de Límites (`--single-program-preflight`):**
+   - Análisis formal de viabilidad y perfiles de ejecución:
+     * $\le 1,000$ chars $\to$ Autobolge Conveyor (`DEMONSTRATED_CONVEYOR` en un único `.mal` Classic autónomo).
+     * $\le 59,049$ celdas $\to$ Búsqueda o ensamblado directo en cinta Classic.
+     * Libro completo (~2.2 MB):
+       - `SINGLE_PROGRAM_FULL_DON_QUIJOTE = NOT_DEMONSTRATED`: la existencia de un único programa autónomo zero-stdin sigue abierta.
+       - `SINGLE_PROGRAM_IMPOSSIBILITY = NOT_DEMONSTRATED`: la compresión empírica conocida (~450 KB) constituye únicamente una cota superior heurística, no una cota inferior demostrada de complejidad de Kolmogórov.
+       - Rutas alternativas verificadas (perfiles separados):
+         1. **BolgeForge Streaming Cat** (`artifacts/cat_compact.mal`, 7,690 celdas): demostrado como consumidor de flujo continuo (requiere `stdin`).
+         2. **MALRT1 Multiprogram** (66 programas puros): demostrado mediante orquestación y concatenación del host externo (**no equivale a un único `.mal`**).
 4. **Ejecutor Nativo y Python Classic VM:**
    - La suite ejecuta sin dependencias rotas mediante el emulador puro de Malbolge Classic o los binarios compilados de la toolkit.
 

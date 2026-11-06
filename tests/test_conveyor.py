@@ -67,15 +67,16 @@ def test_preflight_thermodynamic_analysis():
     assert p1.conveyor_fits is True
     assert p1.verdict == "DEMONSTRATED_CONVEYOR"
 
-    # Giant text (250 KB high-entropy payload): exceeds thermodynamic limit of Malbolge RAM (~117 KB)
+    # Giant text (250 KB high-entropy payload): empirical compression exceeds tape capacity
     import os
     giant = os.urandom(150_000).hex()
     p2 = preflight_single_program(giant)
     assert p2.conveyor_fits is False
     assert p2.direct_payload_fits is False
-    assert p2.thermodynamic_limit_exceeded is True
-    assert p2.verdict == "THERMODYNAMIC_BARRIER_EXCEEDED"
-    assert "BOLGEFORGE_STREAMING_CAT" in p2.recommended_strategy
+    assert p2.empirical_compression_exceeds_tape is True
+    assert p2.verdict == "NOT_DEMONSTRATED"
+    assert "BolgeForge streaming Cat" in p2.recommended_strategy
+    assert "MALRT1 multiprogram dictionary" in p2.recommended_strategy
 
 
 def test_oracle_discovery():

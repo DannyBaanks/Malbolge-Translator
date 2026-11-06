@@ -1,10 +1,14 @@
 """Preflight and feasibility analysis for self-contained Classic Malbolge programs.
 
-Incorporates thermodynamic and architectural boundaries from:
-- Autobolge 2.0 (sterile gap conveyor limit: 3,194 cells)
-- BolgeForge (strict 3^10 memory bound & 7,690-cell streaming Cat)
-- PureEpoch (multi-epoch and loop frontier status)
-- Malbolge-Translator MALRT1 (multiprogram dictionary transport)
+Epistemological boundaries:
+- A known compression size establishes only an empirical upper bound, NOT a demonstrated
+  lower bound on Kolmogorov complexity.
+- Autonomous zero-stdin monolithic generation of large works (e.g. Don Quijote) remains
+  NOT_DEMONSTRATED; neither existence nor general impossibility is formally proved.
+- The 66-symbol MALRT1 multiprogram dictionary is an external host-concatenated profile,
+  NOT equivalent to a single autonomous .mal program.
+- BolgeForge streaming Cat (cat_compact.mal) is a stdin-streaming consumer, not zero-stdin.
+- Autobolge conveyor synthesis is DEMONSTRATED for payloads fitting the sterile gap (<= 3,194 cells).
 """
 
 from __future__ import annotations
@@ -31,7 +35,7 @@ class SingleProgramPreflight:
     conveyor_fits: bool
     direct_payload_fits: bool
     compressed_payload_fits: bool
-    thermodynamic_limit_exceeded: bool
+    empirical_compression_exceeds_tape: bool
     recommended_strategy: str
     verdict: str
     scope: str
@@ -44,17 +48,20 @@ def preflight_single_program(text: str) -> SingleProgramPreflight:
     """Measure necessary conditions and architecture feasibility for Malbolge programs.
 
     Evaluates:
-    1. Autobolge conveyor synthesis: fits if sterile gap requirements (<= 3,194 cells) are met.
-    2. Zero-stdin monolithic source ceiling: requires data <= 59,049 cells.
-    3. Thermodynamic / Shannon limit: if compressed text > ~117 KB, monolithic zero-stdin is physically impossible.
-    4. Recommends BolgeForge streaming Cat or MALRT1 multiprogram dictionary if text exceeds memory limits.
+    1. Autobolge conveyor synthesis: DEMONSTRATED_CONVEYOR if within sterile gap (<= 3,194 cells).
+    2. Zero-stdin monolithic source ceiling: direct embedding requires <= 59,049 cells.
+    3. Empirical compression checks: records heuristic compressed size against tape capacity.
+       Note: empirical compression does NOT prove a Kolmogorov lower bound.
+    4. For large texts where a single autonomous program is NOT_DEMONSTRATED, documents the
+       separate verified alternatives: BolgeForge streaming Cat (stdin) and MALRT1 multiprogram
+       (host-orchestrated dictionary), emphasizing that neither is equivalent to a single autonomous .mal.
     """
     data = text.encode("utf-8")
     packed = zlib.compress(data, level=9)
     direct_fits = len(data) <= CLASSIC_TAPE_CELLS
     compressed_fits = len(packed) <= CLASSIC_TAPE_CELLS
     conveyor_viable = can_conveyor_fit(text)
-    thermo_exceeded = len(packed) > MAX_RAM_ENTROPY_BYTES
+    empirical_exceeded = len(packed) > MAX_RAM_ENTROPY_BYTES
 
     if conveyor_viable:
         rec_strategy = "AUTOBOLGE_CONVEYOR (instant O(N) synthesis, ~2-4 ms)"
@@ -62,12 +69,13 @@ def preflight_single_program(text: str) -> SingleProgramPreflight:
     elif direct_fits:
         rec_strategy = "BEAM_OR_WORD_BANK (fits in 59,049 tape cells; search required)"
         verdict = "FEASIBLE_SEARCH_REQUIRED"
-    elif thermo_exceeded:
+    elif empirical_exceeded:
         rec_strategy = (
-            "BOLGEFORGE_STREAMING_CAT (via stdin) OR MALRT1_MULTIPROGRAM (66 atomic symbol programs). "
-            "Zero-stdin monolithic .mal is physically impossible (Kolmogorov entropy > 3^10 RAM capacity)."
+            "SINGLE_PROGRAM_AUTONOMOUS is NOT_DEMONSTRATED (empirical compression exceeds 3^10 RAM; "
+            "Kolmogorov lower bound unproven). Available verified alternatives: BolgeForge streaming Cat "
+            "(requires stdin) or MALRT1 multiprogram dictionary (requires host harness; not equivalent to a single .mal)."
         )
-        verdict = "THERMODYNAMIC_BARRIER_EXCEEDED"
+        verdict = "NOT_DEMONSTRATED"
     else:
         rec_strategy = "MALRT1_MULTIPROGRAM_DICTIONARY"
         verdict = "NOT_DEMONSTRATED"
@@ -76,7 +84,8 @@ def preflight_single_program(text: str) -> SingleProgramPreflight:
         f"Input: {len(data)} bytes. Autobolge sterile gap: {STERILE_GAP} cells. "
         f"Classic Tape: {CLASSIC_TAPE_CELLS} cells (~{MAX_RAM_ENTROPY_BYTES/1024:.1f} KB max theoretical entropy). "
         f"Strategy: {rec_strategy}. Necessary size checks only. A fitting compressed payload "
-        "does not demonstrate a Classic Malbolge decompressor, synthesis, or execution."
+        "does not demonstrate a Classic Malbolge decompressor, synthesis, or execution. "
+        "Neither existence nor general impossibility of a single autonomous program is demonstrated."
     )
 
     return SingleProgramPreflight(
@@ -87,7 +96,7 @@ def preflight_single_program(text: str) -> SingleProgramPreflight:
         conveyor_fits=conveyor_viable,
         direct_payload_fits=direct_fits,
         compressed_payload_fits=compressed_fits,
-        thermodynamic_limit_exceeded=thermo_exceeded,
+        empirical_compression_exceeds_tape=empirical_exceeded,
         recommended_strategy=rec_strategy,
         verdict=verdict,
         scope=scope,
