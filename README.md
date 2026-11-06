@@ -1,5 +1,6 @@
-# Malbolge Translator
+# Malbolge Translator v2.0 — Generador de Programas Malbolge en O(N) y Modo Multiprograma
 
+[![Version](https://img.shields.io/badge/version-2.0-blue.svg)](https://github.com/DannyBaanks/Malbolge-Translator)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 [![Tests](https://img.shields.io/badge/tests-44%20passed-brightgreen)](#testing)
