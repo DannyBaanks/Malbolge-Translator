@@ -39,6 +39,8 @@ except Exception as _e:
         return x
 
 from .lexicon import Lexicon, DEFAULT_LEXICON, transliterate
+from .conveyor import can_conveyor_fit, synthesize_conveyor
+from .oracle import run_with_oracle
 
 from .roundtrip import (
     CODEC_VERSION,
@@ -258,14 +260,66 @@ class MalbolgeTranslator:
         self,
         text: str,
         progress_callback: Optional[Callable[[int, int, str], None]] = None,
+        engine: str = "auto",
     ) -> "TranslationResult":
-        """Translate text to Malbolge opcodes."""
+        """Translate text to Malbolge opcodes.
+
+        Args:
+            text: Input text
+            progress_callback: Optional progress callback
+            engine: "auto" (default, uses conveyor if fits), "conveyor" (Autobolge O(N)), or "beam"
+        """
         # 1. Transliterate Unicode to ASCII
         processed = transliterate(text, self.lexicon)
 
-        # 2. Generate the entire text at once (generator handles it efficiently)
         if progress_callback:
             progress_callback(0, 1, processed)
+
+        # 2. Check if Autobolge conveyor synthesis can be used
+        use_conveyor = (engine == "conveyor") or (engine == "auto" and can_conveyor_fit(processed))
+        if use_conveyor:
+            try:
+                c_res = synthesize_conveyor(processed, verify=True)
+                if progress_callback:
+                    progress_callback(1, 1, processed)
+                return TranslationResult(
+                    original_text=text,
+                    processed_text=processed,
+                    words=[
+                        WordResult(
+                            index=0,
+                            word=processed,
+                            opcodes=c_res.program,
+                            machine_output=c_res.output,
+                            anchor_name="conveyor_layout",
+                            from_bank=False,
+                            success=True,
+                        )
+                    ],
+                    full_opcodes=c_res.program,
+                    full_program=c_res.program,
+                    stats={
+                        "engine": "conveyor",
+                        "duration_ms": c_res.elapsed_ms,
+                        "duration_s": c_res.elapsed_ms / 1000.0,
+                        "steps": c_res.steps,
+                        "data_cells": c_res.data_cells,
+                        "sha256": c_res.sha256,
+                    },
+                    anchors_used=["conveyor"],
+                )
+            except Exception as e:
+                if engine == "conveyor":
+                    return TranslationResult(
+                        original_text=text,
+                        processed_text=processed,
+                        words=[WordResult(0, processed, "", "", "conveyor", False, False, str(e))],
+                        full_opcodes="",
+                        full_program="",
+                        stats={"engine": "conveyor", "error": str(e)},
+                        anchors_used=["conveyor"],
+                    )
+                # If engine == "auto" and conveyor fails, fall through to generator
 
         if not _MALBOLGE_AVAILABLE or self.generator is None:
             return TranslationResult(
@@ -308,6 +362,7 @@ class MalbolgeTranslator:
             full_program=full_program,
             stats={
                 "words": 1,
+                "engine": "beam",
                 "evaluations": stats.get("evaluations", 0),
                 "duration_s": stats.get("duration_ns", 0) / 1e9,
                 "anchors_used": 1,
@@ -317,10 +372,21 @@ class MalbolgeTranslator:
 
     def execute(self, result: "TranslationResult", max_steps: int = 5_000_000) -> str:
         """Execute the generated program and verify output against both processed and original text."""
-        if not _MALBOLGE_AVAILABLE or self.interpreter is None:
-            print("[WARN] Malbolge interpreter not available (malbolge-generator not installed)")
-            print("[WARN] Execution verification requires malbolge-generator; returning empty")
-            return ""
+        # Use unified oracle for conveyor engine or when malbolge-generator interpreter is unavailable
+        if result.stats.get("engine") == "conveyor" or not _MALBOLGE_AVAILABLE or self.interpreter is None:
+            prog_to_run = result.full_program or result.full_opcodes
+            oracle_res = run_with_oracle(prog_to_run, max_steps=max_steps)
+            processed_match = oracle_res.stdout == result.processed_text
+            original_match = oracle_res.stdout == result.original_text
+            print(f"Output: {repr(oracle_res.stdout)}")
+            print(f"Steps: {oracle_res.steps}, Engine: {oracle_res.engine}, Returncode: {oracle_res.returncode}")
+            print(f"Processed match: {processed_match}")
+            print(f"Original match: {original_match}")
+            if not processed_match and not original_match:
+                print(f"Expected (processed): {repr(result.processed_text)}")
+                print(f"Expected (original): {repr(result.original_text)}")
+            return oracle_res.stdout
+
         out = self.interpreter.execute(result.full_opcodes, max_steps=max_steps, capture_machine=True)
         processed_match = out.output == result.processed_text
         original_match = out.output == result.original_text

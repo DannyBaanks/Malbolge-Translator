@@ -35,6 +35,24 @@ No hay "Bridge → Reset a Ancla" en tiempo de ejecución: esa maquinaria (`anch
 
 ---
 
+## Novedades 2.0 (Integración Autobolge, BolgeForge y PureEpoch)
+
+1. **Motor de Síntesis Constructiva Autobolge en $O(N)$ (`--engine conveyor`):**
+   - Síntesis algebraica instantánea (~2–50 ms) para textos de hasta ~1,000–1,500 caracteres (dentro del hueco estéril de 3,194 celdas, $\Delta c \equiv \Delta d$).
+   - Generación del párrafo de apertura de El Quijote en 50 ms (`--quijote-opening`).
+   - Fallback automático o manual (`--engine auto|conveyor|beam`).
+2. **Puente con el Oráculo Canónico Estricto `mb_ref` (BolgeForge):**
+   - Validación estricta y capacidad de streaming para libros completos a través del Streaming Cat (`artifacts/cat_compact.mal`, 7,690 celdas, `--stream-cat`).
+3. **Preflight Termodinámico y de Límites (`--single-program-preflight`):**
+   - Análisis formal de viabilidad:
+     * $\le 1,000$ chars $\to$ Autobolge Conveyor.
+     * $\le 59,049$ celdas $\to$ Búsqueda estocástica o fragmentada.
+     * $> 117\text{ KB}$ de entropía (ej. El Quijote de 2.2 MB) $\to$ Barrera de Shannon demostrada; despacha a BolgeForge Streaming Cat o MALRT1 Multiprograma.
+4. **Ejecutor Nativo y Python Classic VM:**
+   - La suite ejecuta sin dependencias rotas mediante el emulador puro de Malbolge Classic o los binarios compilados de la toolkit.
+
+---
+
 ## Instalacion
 
 ```bash
@@ -56,6 +74,18 @@ pip install -e .
 ## Inicio Rapido
 
 ```bash
+# Síntesis constructiva O(N) instantánea (~2-50 ms vía Autobolge 2.0)
+malbolge-translate "Cervantes y Malbolge!" --execute
+
+# Apertura de El Quijote sintetizada y verificada en 50 ms
+malbolge-translate --quijote-opening
+
+# Preflight de límites y viabilidad física (Autobolge vs Tape 3^10 vs Shannon)
+malbolge-translate --single-program-preflight "Texto a evaluar"
+
+# Streaming Cat de BolgeForge (transportar archivos de cualquier tamaño por stdin en un solo .mal)
+malbolge-translate --stream-cat quijote.txt
+
 # Transliteracion (legible, lossy)
 malbolge-translate "Hola mundo" --execute
 malbolge-translate "你好" --direct --execute
@@ -399,6 +429,9 @@ SINGLE_PROGRAM_FULL_DON_QUIJOTE        = NOT_DEMONSTRATED (sin cambio)
 
 | Modulo | Proposito |
 |--------|---------|
+| `conveyor.py` | Síntesis constructiva $O(N)$ (Autobolge 2.0) y emulador Classic puro |
+| `oracle.py` | Puente de oráculos (`mb_ref` de BolgeForge, Python Classic VM, Streaming Cat) |
+| `single_program.py` | Preflight termodinámico de límites (Shannon vs capacidad $3^{10}$) |
 | `translator.py` | Pipeline principal: lexicon → split → sintetizar → chain + `translate_roundtrip` / `verify_roundtrip` |
 | `roundtrip.py` | Codec UTF-8 reversible: `MALRT1:<base64>:<sha256>` (sin logica Malbolge) |
 | `multiprogram_roundtrip.py` | Diccionario MALRT1 (66 programas puros) y composicion multiprograma |

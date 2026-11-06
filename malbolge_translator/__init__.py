@@ -2,9 +2,39 @@
 Malbolge Translator - Generate pure Malbolge programs for arbitrary text.
 
 A standalone tool for translating any text (including Unicode) into
-executable Malbolge programs using anchor harness technology.
+executable Malbolge programs using anchor harness technology and
+Autobolge constructive synthesis.
 """
 
+import sys
+from pathlib import Path
+
+# Auto-discover vendored malbolge_toolkit from ISyCo monorepo if malbolge is not installed
+try:
+    import malbolge
+except ImportError:
+    for candidate in [
+        Path(__file__).resolve().parents[2].parent / "ISyCo" / "workspace" / "malbolge_toolkit",
+        Path("/home/danny/Development/ISyCo/workspace/malbolge_toolkit"),
+    ]:
+        if candidate.is_dir() and (candidate / "malbolge").is_dir():
+            sys.path.insert(0, str(candidate))
+            break
+
+from .conveyor import (
+    ConveyorSynthesisResult,
+    can_conveyor_fit,
+    conveyor_capacity,
+    run_classic_vm,
+    synthesize_conveyor,
+)
+from .oracle import (
+    OracleResult,
+    find_mb_ref,
+    find_streaming_cat,
+    run_with_oracle,
+    stream_through_compact_cat,
+)
 from .translator import MalbolgeTranslator, TranslationResult, WordResult, RoundtripResult, RoundtripVerification
 from .lexicon import Lexicon, transliterate, DEFAULT_LEXICON
 from .fresh_vm_continuation import (
@@ -37,8 +67,9 @@ from .roundtrip import (
     encode_roundtrip,
     encode_roundtrip_envelope,
 )
+from .single_program import SingleProgramPreflight, preflight_single_program
 
-__version__ = "1.0.0"
+__version__ = "2.0.0"
 __all__ = [
     "MalbolgeTranslator",
     "TranslationResult",
@@ -74,4 +105,16 @@ __all__ = [
     "save_symbol_dictionary",
     "transport_text",
     "verify_symbol_dictionary",
+    "ConveyorSynthesisResult",
+    "can_conveyor_fit",
+    "conveyor_capacity",
+    "run_classic_vm",
+    "synthesize_conveyor",
+    "OracleResult",
+    "find_mb_ref",
+    "find_streaming_cat",
+    "run_with_oracle",
+    "stream_through_compact_cat",
+    "SingleProgramPreflight",
+    "preflight_single_program",
 ]

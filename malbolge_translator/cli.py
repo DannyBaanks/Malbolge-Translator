@@ -56,6 +56,22 @@ def main(argv: list[str] | None = None) -> int:
     
     parser.add_argument("--quijote", action="store_true", help="Generate Don Quijote (downloads if needed)")
     parser.add_argument(
+        "--quijote-opening",
+        action="store_true",
+        help="Synthesize the opening paragraph of Don Quijote using Autobolge O(N) in ~3 ms",
+    )
+    parser.add_argument(
+        "--stream-cat",
+        type=Path,
+        help="Stream an arbitrary text file through BolgeForge's 7,690-cell compact Cat via mb_ref",
+    )
+    parser.add_argument(
+        "--engine",
+        choices=("auto", "conveyor", "beam"),
+        default="auto",
+        help="Synthesis engine: auto (conveyor if fits, else beam), conveyor (Autobolge O(N)), beam",
+    )
+    parser.add_argument(
         "--single-program-preflight",
         action="store_true",
         help="Measure prerequisites for one self-contained Classic Malbolge program; does not synthesize.",
@@ -84,6 +100,41 @@ def main(argv: list[str] | None = None) -> int:
     
     
     
+    # Handle Stream Cat
+    if args.stream_cat:
+        from .oracle import stream_through_compact_cat
+        if not args.stream_cat.exists():
+            print(f"[ERROR] Input file {args.stream_cat} not found")
+            return 1
+        data = args.stream_cat.read_bytes()
+        print(f"[STREAM CAT] Streaming {len(data)} bytes through BolgeForge 7,690-cell Cat under mb_ref...")
+        res = stream_through_compact_cat(data)
+        print(f"[STREAM CAT] Completed! Returncode={res.returncode}, Output bytes={len(res.stdout.encode('latin-1', errors='replace'))}")
+        return 0 if res.returncode == 0 else 1
+
+    # Handle Quijote opening fast synthesis
+    if args.quijote_opening:
+        from .conveyor import synthesize_conveyor
+        quijote_text = (
+            "En un lugar de la Mancha, de cuyo nombre no quiero acordarme, no ha mucho "
+            "tiempo que vivia un hidalgo de los de lanza en astillero, adarga antigua, "
+            "rocin flaco y galgo corredor. Una olla de algo mas vaca que carnero, salpicon "
+            "las mas noches, duelos y quebrantos los sabados, lantejas los viernes, algun "
+            "palomino de anadidura los domingos, consumian las tres partes de su hacienda."
+        )
+        print(f"[QUIJOTE OPENING] Synthesizing opening ({len(quijote_text)} chars) with Autobolge O(N)...")
+        c_res = synthesize_conveyor(quijote_text, verify=True)
+        print(f"[OK] Synthesized in {c_res.elapsed_ms:.2f} ms!")
+        print(f"  Program size: {len(c_res.program)} chars")
+        print(f"  Opcode count: {c_res.opcode_count}")
+        print(f"  Data cells: {c_res.data_cells}")
+        print(f"  Verified steps: {c_res.steps}")
+        args.output_dir.mkdir(parents=True, exist_ok=True)
+        out_file = args.output_dir / "quijote_opening.mal"
+        out_file.write_text(c_res.program, encoding="utf-8")
+        print(f"[OK] Saved to {out_file}")
+        return 0
+
     # Handle Quijote generation
     if args.quijote:
         return generate_quijote(translator, args)
@@ -221,7 +272,7 @@ def main(argv: list[str] | None = None) -> int:
         if i % 10 == 0:
             print(f"  Progress: {i+1}/{total} words")
     
-    result = translator.translate(text, progress_callback=progress)
+    result = translator.translate(text, progress_callback=progress, engine=args.engine)
     
     # Save
     result.save_all(args.output_dir, args.base_name)
@@ -229,12 +280,17 @@ def main(argv: list[str] | None = None) -> int:
     
     print(f"\n[SUMMARY]")
     print(f"  Mode: transliteration")
+    print(f"  Engine: {result.stats.get('engine', 'beam')}")
     print(f"  Words: {len(result.words)}")
     print(f"  Opcodes: {len(result.full_opcodes)}")
     print(f"  Program: {len(result.full_program)} chars")
-    print(f"  Evaluations: {result.stats['evaluations']}")
-    print(f"  Time: {result.stats['duration_s']:.2f}s")
-    print(f"  Anchors: {result.stats['anchors_used']}")
+    if 'evaluations' in result.stats:
+        print(f"  Evaluations: {result.stats['evaluations']}")
+    if 'duration_s' in result.stats:
+        print(f"  Time: {result.stats['duration_s']:.3f}s")
+    elif 'duration_ms' in result.stats:
+        print(f"  Time: {result.stats['duration_ms']:.2f}ms")
+    print(f"  Anchors: {result.stats.get('anchors_used', 1)}")
     if args.show_program:
         print(f"  Program: {result.full_program[:500]}...")
     
