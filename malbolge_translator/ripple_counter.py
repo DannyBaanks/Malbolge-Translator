@@ -21,6 +21,8 @@ LMAO_CANDIDATE_PATHS = [
 ]
 
 ORACLE_CANDIDATE_PATHS = [
+    Path("/home/danny/Development/ISyCo Git/BolgeForge/mb_ref"),
+    Path("/home/danny/Development/ISyCo Git/BolgeForge/oracle/mb_ref"),
     Path("/home/danny/Development/ISyCo/workspace/assembly/malbolge/reference_interpreter_classic"),
     Path("/home/danny/Development/ISyCo Git/BolgeForge/artifacts/mb_ref"),
 ]
