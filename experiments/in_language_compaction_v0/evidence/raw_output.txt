@@ -1,0 +1,12 @@
+=== MALBOLGE CLASSIC IN-LANGUAGE EXPANSION AUDIT ===
+Host: Ubuntu 24.04 (Linux x86_64)
+Oracle: reference_interpreter_classic (Strict Olmstead C)
+Compiler: LMAO v0.6.0 (Matthias Lutter)
+
+Stage 1: outputs=5, source_bytes=2991, ratio=0.0017, exact=True, halted=True, sha256=b146fdd240c6274981945987b8460460a5ee5d88f2b9d27540df5a06d6250786
+Stage 2: outputs=25, source_bytes=3367, ratio=0.0074, exact=True, halted=True, sha256=7bb78ef4c4ecba00d5b07030b0d4054c3bdd2b680418252397cc7cb3c3d5a5ea
+Stage 3: outputs=125, source_bytes=3649, ratio=0.0343, exact=True, halted=True, sha256=1cfa0cd6985e6fa5667fb4ddf2ad4e6ea3d03aedb65f7cd5f9be70f54c392f93
+Stage 4: outputs=625, source_bytes=4119, ratio=0.1517, exact=True, halted=True, sha256=816f1471437d0c64877e01563cd54ee19c26546124a9f9f50989e0cbfb73b2a4
+Stage 5: outputs=3125, source_bytes=4608, ratio=0.6782, exact=True, halted=True, sha256=04288ffc1f0806748ea62ef08db2b1b8472ea0c68668891f498f4103dd4e5def
+Stage 6: outputs=15625, source_bytes=4984, ratio=3.1350, exact=True, halted=True, sha256=ea5c3b24e26e48ad519d934de464cb3539643e731c57fa728f728a2dab88ceb8
+Stage 7: outputs=78125, source_bytes=5360, ratio=14.5756, exact=True, halted=True, sha256=aaae639e71fb9f1f9333c1caef2af9c260bbd73236b2103482411ac34cfd6c4a

@@ -53,7 +53,11 @@ No hay "Bridge → Reset a Ancla" en tiempo de ejecución: esa maquinaria (`anch
        - Rutas alternativas verificadas (perfiles separados):
          1. **BolgeForge Streaming Cat** (`artifacts/cat_compact.mal`, 7,690 celdas): demostrado como consumidor de flujo continuo (requiere `stdin`).
          2. **MALRT1 Multiprogram** (66 programas puros): demostrado mediante orquestación y concatenación del host externo (**no equivale a un único `.mal`**).
-4. **Ejecutor Nativo y Python Classic VM:**
+5. **Demostración de Expansión Positiva y Contador Ripple XLAT2 (`--ripple-counter <STAGES>`):**
+   - Demostración empírica y formal de que el flujo de salida de Malbolge Classic **NO** está acotado por el techo de memoria de 59,049 celdas.
+   - Generación de programas autónomos cero-stdin con cascadas de ciclos `XLAT2` de longitud 5 (`Nop/Nop/Nop/Nop/MovD`) en serie (contador ripple).
+   - Emisión demostrada y verificada con el oráculo C estricto de hasta **78,125 bytes** con terminación limpia (`HALT`) desde un archivo de ~5.3 KB (factor de expansión **14.58x**). Ver reporte y evidencia en `experiments/in_language_compaction_v0/`.
+6. **Ejecutor Nativo y Python Classic VM:**
    - La suite ejecuta sin dependencias rotas mediante el emulador puro de Malbolge Classic o los binarios compilados de la toolkit.
 
 ---
@@ -87,6 +91,9 @@ malbolge-translate --quijote-opening
 
 # Preflight de límites y viabilidad física (Autobolge vs Tape 3^10 vs Shannon)
 malbolge-translate --single-program-preflight "Texto a evaluar"
+
+# Expansión positiva en el propio lenguaje (78,125 caracteres emitidos desde 5.3 KB con parada limpia HALT, ratio 14.58x)
+malbolge-translate --ripple-counter 7
 
 # Streaming Cat de BolgeForge (transportar archivos de cualquier tamaño por stdin en un solo .mal)
 malbolge-translate --stream-cat quijote.txt

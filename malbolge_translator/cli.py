@@ -76,6 +76,17 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Measure prerequisites for one self-contained Classic Malbolge program; does not synthesize.",
     )
+    parser.add_argument(
+        "--ripple-counter",
+        type=int,
+        metavar="STAGES",
+        help="Synthesize and verify an N-stage XLAT2 nested ripple counter (outputs = 5^N bytes, ratio > 1.0 for N>=6)",
+    )
+    parser.add_argument(
+        "--ripple-char",
+        default="A",
+        help="Character to emit in ripple counter loop (default: 'A')",
+    )
     
     parser.add_argument("--lexicon-add", nargs=2, metavar=("CHAR", "REPL"), action="append", help="Add custom lexicon mapping")
     parser.add_argument("--lexicon-file", type=Path, help="Load custom lexicon from JSON file")
@@ -100,6 +111,23 @@ def main(argv: list[str] | None = None) -> int:
     
     
     
+    # Handle Ripple Counter
+    if args.ripple_counter is not None:
+        from .ripple_counter import compile_and_verify_ripple_counter
+        print(f"[RIPPLE COUNTER] Synthesizing {args.ripple_counter}-stage ripple counter (expected outputs: {5**args.ripple_counter})...")
+        res = compile_and_verify_ripple_counter(
+            args.ripple_counter,
+            char_to_print=args.ripple_char,
+            out_dir=args.output_dir,
+        )
+        print(f"Program generated: {res.program_path} ({res.source_bytes} bytes)")
+        print(f"Executed outputs: {res.output_bytes} bytes")
+        print(f"Expansion ratio: {res.ratio:.4f}x")
+        print(f"Bit-exact match: {res.exact_match}")
+        print(f"Halted cleanly: {res.halted_cleanly}")
+        print(f"SHA-256: {res.sha256}")
+        return 0 if (res.exact_match and res.halted_cleanly) else 1
+
     # Handle Stream Cat
     if args.stream_cat:
         from .oracle import stream_through_compact_cat

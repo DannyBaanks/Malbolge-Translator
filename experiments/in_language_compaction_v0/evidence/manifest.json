@@ -1,0 +1,115 @@
+{
+  "timestamp": "2026-11-06T07:05:00Z",
+  "experiment_id": "IN_LANGUAGE_COMPACTION_V0",
+  "topic": "Malbolge Classic Autonomous In-Language Expansion & Memory Ceiling Audit",
+  "host": {
+    "os": "Ubuntu 24.04 LTS (x86_64)",
+    "python": "3.12",
+    "compiler": "LMAO v0.6.0 (Matthias Lutter)",
+    "oracle": "workspace/assembly/malbolge/reference_interpreter_classic (Strict Olmstead C Reference)"
+  },
+  "theorems": [
+    {
+      "id": "THEOREM_1",
+      "name": "Single-Pass Conveyor Constraint",
+      "statement": "Any straight-line Malbolge code conveyor advancing d monotonically without resets requires at least 2 cells per output byte (1 data recipe cell + 1 code cell), constraining the maximum single-pass expansion ratio to <= 0.50.",
+      "status": "PROVEN_AND_VERIFIED"
+    },
+    {
+      "id": "THEOREM_2",
+      "name": "Array Storage Capacity Bound",
+      "statement": "Any decompressor that stores an explicit uncompressed array of characters in memory cannot exceed VM capacity (59,049 cells) and is practically bounded to <= 700 characters under LMAO bootstrap overhead or <= 22,500 under ideal packaging.",
+      "status": "PROVEN_AND_VERIFIED"
+    },
+    {
+      "id": "THEOREM_3",
+      "name": "XLAT2 Nested Ripple Counter Expansion",
+      "statement": "By cascading N independent loop-resistant XLAT2 cycle-5 cells (Nop/Nop/Nop/Nop/MovD) in series as a ripple counter, an autonomous zero-stdin Malbolge Classic program executes 5^N loop iterations with source size O(N). Output volume exceeds source size for N >= 6, and exceeds the entire 59,049 memory ceiling for N >= 7 while halting cleanly with zero VM crashes.",
+      "status": "DEMONSTRATED"
+    }
+  ],
+  "benchmarks": [
+    {
+      "stages": 1,
+      "expected_outputs": 5,
+      "output_bytes": 5,
+      "source_bytes": 2991,
+      "ratio": 0.0017,
+      "exact_match": true,
+      "halted_cleanly": true,
+      "sha256": "b146fdd240c6274981945987b8460460a5ee5d88f2b9d27540df5a06d6250786"
+    },
+    {
+      "stages": 2,
+      "expected_outputs": 25,
+      "output_bytes": 25,
+      "source_bytes": 3367,
+      "ratio": 0.0074,
+      "exact_match": true,
+      "halted_cleanly": true,
+      "sha256": "7bb78ef4c4ecba00d5b07030b0d4054c3bdd2b680418252397cc7cb3c3d5a5ea"
+    },
+    {
+      "stages": 3,
+      "expected_outputs": 125,
+      "output_bytes": 125,
+      "source_bytes": 3649,
+      "ratio": 0.0343,
+      "exact_match": true,
+      "halted_cleanly": true,
+      "sha256": "1cfa0cd6985e6fa5667fb4ddf2ad4e6ea3d03aedb65f7cd5f9be70f54c392f93"
+    },
+    {
+      "stages": 4,
+      "expected_outputs": 625,
+      "output_bytes": 625,
+      "source_bytes": 4119,
+      "ratio": 0.1517,
+      "exact_match": true,
+      "halted_cleanly": true,
+      "sha256": "816f1471437d0c64877e01563cd54ee19c26546124a9f9f50989e0cbfb73b2a4"
+    },
+    {
+      "stages": 5,
+      "expected_outputs": 3125,
+      "output_bytes": 3125,
+      "source_bytes": 4608,
+      "ratio": 0.6782,
+      "exact_match": true,
+      "halted_cleanly": true,
+      "sha256": "04288ffc1f0806748ea62ef08db2b1b8472ea0c68668891f498f4103dd4e5def"
+    },
+    {
+      "stages": 6,
+      "expected_outputs": 15625,
+      "output_bytes": 15625,
+      "source_bytes": 4984,
+      "ratio": 3.1350,
+      "exact_match": true,
+      "halted_cleanly": true,
+      "sha256": "ea5c3b24e26e48ad519d934de464cb3539643e731c57fa728f728a2dab88ceb8"
+    },
+    {
+      "stages": 7,
+      "expected_outputs": 78125,
+      "output_bytes": 78125,
+      "source_bytes": 5360,
+      "ratio": 14.5756,
+      "exact_match": true,
+      "halted_cleanly": true,
+      "sha256": "aaae639e71fb9f1f9333c1caef2af9c260bbd73236b2103482411ac34cfd6c4a"
+    }
+  ],
+  "quijote_audit": {
+    "target_book_chars": 2050000,
+    "memory_ceiling_words": 59049,
+    "max_initial_entropy_bytes": 116988,
+    "shannon_text_entropy_estimate_bytes": 256250,
+    "decompressor_minimum_overhead_words": 50000,
+    "verdict_single_autonomous_full_book": "NOT_DEMONSTRATED",
+    "verdict_opening_paragraph_single_mal": "DEMONSTRATED",
+    "verdict_multiprogram_dictionary_full_book": "DEMONSTRATED",
+    "verdict_streaming_cat_full_book": "DEMONSTRATED",
+    "verdict_positive_expansion_malbolge_classic": "DEMONSTRATED"
+  }
+}

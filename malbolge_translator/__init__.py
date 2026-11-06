@@ -68,6 +68,11 @@ from .roundtrip import (
     encode_roundtrip_envelope,
 )
 from .single_program import SingleProgramPreflight, preflight_single_program
+from .ripple_counter import (
+    RippleCounterResult,
+    generate_ripple_counter_hell,
+    compile_and_verify_ripple_counter,
+)
 
 __version__ = "2.0.0"
 __all__ = [
@@ -117,4 +122,7 @@ __all__ = [
     "stream_through_compact_cat",
     "SingleProgramPreflight",
     "preflight_single_program",
+    "RippleCounterResult",
+    "generate_ripple_counter_hell",
+    "compile_and_verify_ripple_counter",
 ]

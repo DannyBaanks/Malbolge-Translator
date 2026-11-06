@@ -1,0 +1,50 @@
+/* HeLL Nested LOOP5 Ripple Counter */
+/* Stages: 2, Total Outputs: 25 */
+.CODE
+ROT:
+	Rot/Nop
+	Jmp
+
+OUT:
+	Out/Nop
+	Jmp
+
+MOVD_INIT:
+	MovD
+	Jmp
+
+MOVD_LOOP:
+	MovD/Nop
+	Jmp
+
+LOOP5_1:
+	Nop/Nop/Nop/Nop/MovD
+	Jmp
+
+LOOP5_2:
+	Nop/Nop/Nop/Nop/MovD
+	Jmp
+
+HALT:
+	Hlt
+
+.DATA {
+loop:
+	R_MOVD_LOOP
+loop_start:
+	OUT ?-
+	R_OUT
+	LOOP5_1 check_stage2
+	MOVD_LOOP loop
+
+check_stage2:
+	LOOP5_2 exit_all
+	MOVD_LOOP loop
+
+exit_all:
+	HALT
+
+ENTRY:
+	ROT 195 R_ROT
+	MOVD_INIT loop_start
+}
